@@ -1,7 +1,5 @@
 // This file contains the definition of the Block class.
-
-#ifndef BLOCKS_H
-#define BLOCKS_H
+#pragma once
 
 #include <vector>
 using std::vector;
@@ -56,5 +54,3 @@ public:
     CMineBlock() : CBlock() { type = MINE; };
     void explode() { /* Code to handle explosion */ };
 };
-
-#endif

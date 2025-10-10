@@ -1,6 +1,8 @@
-// This file is for visualization-related declarations and includes. Using SFML for graphics.
+// This file is for visualization-related declarations and includes. Using SFML for graphics. Handling IO operations.
+#pragma once
 
 #include "SFML/Graphics.hpp"
+#include <iostream>
 #include <cmath>
 using sf::Event;
 using sf::RenderWindow;
@@ -20,7 +22,7 @@ void initVisualize(RenderWindow &window, const std::string &title) {
     // Initialize the visualization window.
     VideoMode desktopMode = VideoMode::getDesktopMode();
     // Set the window size to 50% of the desktop resolution and set the window unresizable.
-    window.create(VideoMode(desktopMode.width / 2, desktopMode.height / 2), title, sf::Style::Titlebar | sf::Style::Close);
+    window.create(VideoMode(desktopMode.width / 2, desktopMode.width / 32 * 9), title, sf::Style::Titlebar | sf::Style::Close);
 
     // Set virtual coordinate system to 1920x1080 for consistency across different screen resolutions.
     sf::View view(sf::FloatRect(0.f, 0.f, 1920.f, 1080.f));
@@ -134,4 +136,55 @@ void updateTrail(std::vector<TrailPoint> &trail, sf::RenderWindow &window)
             }), // Define the condition to remove old points (here it need to check if the point's lifetime is greater than 0.5 seconds. if true, the point should be moved to the end["the end" is declared below as "trail.end()", means points that meet the condition would be moved to the end of the queue]).
         trail.end() // The new logical end of the vector after rearrangement. It tells the function where to stop erasing (from the new logical end to the actual end).
     ); // Finally, erase the old points from the new logical end to the actual end.
+}
+
+
+/* Drawing function */
+void drawRectangle(RenderWindow &window, float x1, float y1, float x2, float y2, sf::Color color) {
+    // 
+    sf::RectangleShape rectangle(sf::Vector2f(x2 - x1, y2 - y1));
+    rectangle.setPosition(x1, y1);
+    rectangle.setFillColor(color);
+    window.draw(rectangle);
+}
+
+void drawText(RenderWindow &window, float x1, float y1, float x2, float y2, const std::string &textString, sf::Color color) {
+    float width = x2 - x1;
+    float height = y2 - y1;
+    static sf::Font font;
+    static bool fontLoaded = false;
+    if (!fontLoaded) {
+        if (!font.loadFromFile("../font/font.ttf")) {
+            cout << "\33[31m[ERROR]\33[0m Failed to load font 'font.ttf'." << endl;
+            return;
+        } else {
+            fontLoaded = true;
+        }
+    }
+
+    sf::Text text;
+    text.setFont(font);
+    text.setString(textString);
+    text.setCharacterSize(static_cast<unsigned int>(height * 0.6f)); // Set character size relative to rectangle height.
+    text.setFillColor(color);
+
+    // Center the text within the rectangle.
+    sf::FloatRect textRect = text.getLocalBounds();
+    text.setOrigin(textRect.left + textRect.width / 2.0f, textRect.top + textRect.height / 2.0f);
+    text.setPosition(x1 + width / 2.0f, y1 + height / 2.0f);
+
+    window.draw(text);
+}
+
+
+/* Mouse click */
+bool isMouseInArea(sf::RenderWindow &window, const sf::Event &event, float x1, float y1, float x2, float y2) {
+    if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
+        sf::Vector2i pixelPos(event.mouseButton.x, event.mouseButton.y);
+        sf::Vector2f worldPos = window.mapPixelToCoords(pixelPos);
+
+        return worldPos.x >= x1 && worldPos.x <= x2 &&
+               worldPos.y >= y1 && worldPos.y <= y2;
+    }
+    return false;
 }

@@ -6,7 +6,7 @@ Set-Location "source"
 $cppFiles = Get-ChildItem -Filter *.cpp | ForEach-Object { $_.FullName }
 
 # 编译并链接
-g++ $cppFiles -o ../output/main.exe -lsfml-graphics -lsfml-window -lsfml-system -mconsole
+g++ $cppFiles -o ../output/main.exe -lsfml-graphics -lsfml-window -lsfml-system
 
 
 # Run the game if the build is successful.

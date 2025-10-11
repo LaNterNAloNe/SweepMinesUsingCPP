@@ -3,18 +3,19 @@
 #include <iostream>
 #include <vector>
 #include <memory>
-#include "../include/Page.hpp"
-#include "../include/blocks.hpp"
-#include "../include/debug.hpp"
-#include "../include/visualize.hpp"
-#include "../include/PageBeginning.hpp"
+#include "Page.hpp"
+#include "blocks.hpp"
+#include "debug.hpp"
+#include "visualize.hpp"
+#include "PageBeginning.hpp"
 
 using std::cin;
 using std::cout;
 using std::endl;
 
 
-void showLicense() {
+void showLicense() 
+{
     cout << "---------------------------------------------------------" << endl;
     cout << "SweepMine" << endl;
     cout << "Version: Developing" << endl;

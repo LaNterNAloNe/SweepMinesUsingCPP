@@ -8,6 +8,13 @@
 #include "Page.hpp"
 #include "visualize.hpp"
 
+// Exit button parameter
+#define exitButtonX 50
+#define exitButtonY 50
+#define exitButtonSize 50
+#define exitButtonArea MAKE_AREA(exitButtonX, exitButtonY, exitButtonSize)
+
+
 /* Unique pointer to the beginning page */
 class CPageBeginning : public CPage 
 {
@@ -19,3 +26,6 @@ public:
     ~CPageBeginning() override {}
 };
 
+struct SPageBeginningParameter {
+    // Parameters for the beginning page.
+};

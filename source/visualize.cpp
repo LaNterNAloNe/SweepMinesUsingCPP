@@ -11,9 +11,9 @@ void initVisualize(RenderWindow &window, const std::string &title) {
     window.create(VideoMode(desktopMode.width / 2, desktopMode.width / 32 * 9), title, sf::Style::Titlebar | sf::Style::Close);
 
     // Set virtual coordinate system to 1920x1080 for consistency across different screen resolutions.
-    sf::View view(sf::FloatRect(0.f, 0.f, 1920.f, 1080.f));
+    sf::View view(sf::FloatRect(0.f, 0.f, VIRTUAL_WINDOW_SIZE_X, VIRTUAL_WINDOW_SIZE_Y));
     // Set graphic center
-    view.setCenter(1920.f / 2, 1080.f / 2);
+    view.setCenter(VIRTUAL_WINDOW_SIZE_X / 2, VIRTUAL_WINDOW_SIZE_Y / 2);
     window.setView(view);
 
     /* OUTPUT */
@@ -121,58 +121,132 @@ void updateTrail(std::vector<TrailPoint> &trail, sf::RenderWindow &window)
 }
 
 /* Mouse position judgement */
-bool isMouseInArea(sf::RenderWindow &window, const sf::Event &event, float x1, float y1, float x2, float y2)
+bool isMouseStayInArea(sf::RenderWindow &window, const sf::Event &event, sf::FloatRect area)
 {
-    if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left)
-    {
-        sf::Vector2i pixelPos(event.mouseButton.x, event.mouseButton.y);
-        sf::Vector2f worldPos = window.mapPixelToCoords(pixelPos);
+    // Get mouse position in real coordinates.
+    sf::Vector2i pixelPos = sf::Mouse::getPosition(window);
+    // Transform pixel position to virtual coordinates.
+    sf::Vector2f worldPos = window.mapPixelToCoords(pixelPos);
 
-        return worldPos.x >= x1 && worldPos.x <= x2 &&
-               worldPos.y >= y1 && worldPos.y <= y2;
+    // Check if the mouse is inside the area.
+    return area.contains(worldPos);
+}
+
+int isMouseClickInArea(sf::RenderWindow &window, const sf::Event &event, sf::FloatRect area)
+{
+    // Get mouse position in real coordinates.
+    sf::Vector2i pixelPos(event.mouseButton.x, event.mouseButton.y);
+    sf::Vector2f worldPos = window.mapPixelToCoords(pixelPos);
+
+    // Check if the mouse click is inside the area.
+    if (area.contains(worldPos))
+    {
+        if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left)
+        {
+            return LEFTCLICK;
+        }
+        else if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Right)
+        {
+            return RIGHTCLICK;
+        }
+        else 
+        {
+            return false;
+        }
     }
     return false;
 }
 
+
+
 /* Drawing function */
 void drawRectangle(RenderWindow &window, float x1, float y1, float x2, float y2, sf::Color color)
 {
-    //
+    // Draw a rectangle with the given coordinates and color.
     sf::RectangleShape rectangle(sf::Vector2f(x2 - x1, y2 - y1));
     rectangle.setPosition(x1, y1);
     rectangle.setFillColor(color);
+
+    // Draw the rectangle.
     window.draw(rectangle);
 }
 
-void drawText(RenderWindow &window, float x1, float y1, float x2, float y2, const std::string &textString, sf::Color color)
+void drawText(sf::RenderWindow &window, float x, float y, unsigned int fontSize, const std::string &textString, sf::Color color, const int align)
 {
-    float width = x2 - x1;
-    float height = y2 - y1;
+    // Load font if not already loaded.
     static sf::Font font;
     static bool fontLoaded = false;
     if (!fontLoaded)
     {
         if (!font.loadFromFile("../font/font.ttf"))
         {
-            cout << "\33[31m[ERROR]\33[0m Failed to load font 'font.ttf'." << endl;
+            std::cout << "\33[31m[ERROR]\33[0m Failed to load font 'font.ttf'." << std::endl;
             return;
         }
-        else
-        {
-            fontLoaded = true;
-        }
+        fontLoaded = true;
     }
 
+    // Create text object.
     sf::Text text;
     text.setFont(font);
     text.setString(textString);
-    text.setCharacterSize(static_cast<unsigned int>(height * 0.6f)); // Set character size relative to rectangle height.
+    text.setCharacterSize(fontSize); // 直接使用像素单位
     text.setFillColor(color);
 
-    // Center the text within the rectangle.
+    // Calculate text position based on alignment.
     sf::FloatRect textRect = text.getLocalBounds();
-    text.setOrigin(textRect.left + textRect.width / 2.0f, textRect.top + textRect.height / 2.0f);
-    text.setPosition(x1 + width / 2.0f, y1 + height / 2.0f);
 
+    // Set origin based on alignment.
+    if (align == LEFT)
+        text.setOrigin(textRect.left, textRect.top + textRect.height / 2.0f);
+    else if (align == RIGHT)
+        text.setOrigin(textRect.left + textRect.width, textRect.top + textRect.height / 2.0f);
+    else // Default to center alignment.
+        text.setOrigin(textRect.left + textRect.width / 2.0f, textRect.top + textRect.height / 2.0f);
+
+    // Set position.
+    text.setPosition(x, y);
+
+    // Draw the text.
     window.draw(text);
+}
+
+bool drawTextureWithPath(sf::RenderWindow &window, float x, float y, float size, sf::Texture &texture, const std::string &path)
+{
+    // Judge if size is valid.
+    if (size <= 0)
+    {
+        std::cout << "\33[31m[ERROR]\33[0m Invalid size." << std::endl;
+        return false;
+    }
+
+    // Load texture from file
+    if (!texture.loadFromFile("../material/" + path))
+    {
+        std::cout << "\33[31m[ERROR]\33[0m Failed to load texture '" << path << "'." << std::endl;
+        return false;
+    }
+
+    // Get original texture size
+    sf::Vector2u originalSize = texture.getSize();
+    if (originalSize.x == 0 || originalSize.y == 0)
+    {
+        std::cout << "\33[31m[ERROR]\33[0m Invalid texture size." << std::endl;
+        return false;
+    }
+
+    // Calculate scale factor to make texture width = scale px
+    float scaleFactor = size / static_cast<float>(originalSize.x);
+
+    // Create sprite and apply scaling
+    sf::Sprite sprite(texture);
+    sprite.setScale(scaleFactor, scaleFactor);
+
+    // Set origin to center for proper positioning
+    sprite.setOrigin(originalSize.x / 2.f, originalSize.y / 2.f);
+    sprite.setPosition(x, y);
+
+    // Draw sprite
+    window.draw(sprite);
+    return true;
 }

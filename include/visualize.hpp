@@ -12,6 +12,16 @@ using sf::VideoMode;
 using std::cout;
 using std::endl;
 
+// Set virtual window size to 1920x1080 for consistency across different screen resolutions.
+#define VIRTUAL_WINDOW_SIZE_X 1920
+#define VIRTUAL_WINDOW_SIZE_Y 1080
+
+// Get the area of a button using Marco Function
+#define MAKE_AREA(x, y, size) sf::FloatRect( \
+    (x) - (size) / 2.f,                      \
+    (y) - (size) / 2.f,                      \
+    (size),                                  \
+    (size))
 
 /* Visualize initialization */
 void initVisualize(RenderWindow &window, const std::string &title);
@@ -28,12 +38,24 @@ void mouseMoveTrail(sf::Event &event, sf::RenderWindow &window, std::vector<Trai
 void updateTrail(std::vector<TrailPoint> &trailPoints, RenderWindow &window);
 
 /* Mouse position judgement */
-bool isMouseInArea(sf::RenderWindow &window, const sf::Event &event, float x1, float y1, float x2, float y2);
+enum MouseClickResult {
+    LEFTCLICK = 1,
+    RIGHTCLICK = 2,
+};
+
+bool isMouseStayInArea(sf::RenderWindow &window, const sf::Event &event, sf::FloatRect area);
+int isMouseClickInArea(sf::RenderWindow &window, const sf::Event &event, sf::FloatRect area);
 
 /* Drawing function */
-void drawRectangle(RenderWindow &window, float x1, float y1, float x2, float y2, sf::Color color);
-void drawText(RenderWindow &window, float x1, float y1, float x2, float y2, const std::string &textString, sf::Color color);
+enum Align {
+    LEFT = 0,
+    RIGHT = 1,
+    CENTER = 2,
+};
 
+void drawRectangle(RenderWindow &window, float x1, float y1, float x2, float y2, sf::Color color);
+void drawText(sf::RenderWindow &window, float x, float y, unsigned int fontSize, const std::string &textString, sf::Color color, const int align = CENTER);
+bool drawTextureWithPath(RenderWindow &window, float x, float y, float size, Texture &texture, const std::string &path);
 
 
 

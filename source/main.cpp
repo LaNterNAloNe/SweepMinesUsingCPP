@@ -1,61 +1,68 @@
 #include "../include/main.hpp"
 
+int main()
+{
+    // Show license that give a brife introduction
+    showLicense();
+    std::cout << "\33[34m[INFO]\33[0m Using debugging terminal." << std::endl;
 
-int main() {
-    // Show the debugging info in the terminal if needed.
-    cout << "\33[36m[INFO]\33[0m Using debugging terminal." << endl;
-
-    int page = BEGINNING_PAGE;
-
+    // Create the main window for the application and initialize it.
     RenderWindow mainWindow;
-    // Initialize the visualization window with specified dimensions and title. Initial height and width is up to user's system resolotion.
     initVisualize(mainWindow, "SweepMine");
 
-    // Vector to store trail points for mouse movement effect.
     std::vector<TrailPoint> trail;
+    int currentPage = BEGINNING_PAGE;
+    cout << "\33[34m[INFO]\33[0m Current page: " << getPageName(currentPage) << endl;
 
-    // Main loop to keep the window open until closed by the user.
-    while (mainWindow.isOpen()) {
-        Event event;
+    /* Page management */
+    // Map to store unique pointers to different pages, using C++ features.
+    std::map<int, std::unique_ptr<CPage>> pages;
+    pages[BEGINNING_PAGE] = std::make_unique<CPageBeginning>();
+    // The following pages are not implemented yet, but will be added in the future.
+    // pages[GAME_PAGE] = std::make_unique<CPageGame>();
+    // pages[ENDING_PAGE] = std::make_unique<CPageEnding>();
 
-        // Clear the window at the start of each frame.
-        mainWindow.clear();
+    /* Main game loop */
+    while (mainWindow.isOpen())
+    {
+        // Event object to hold events.
+        sf::Event event;
 
-        // Handle mouse move events to create a trail effect.
-        mouseMoveTrail(event, mainWindow, trail);
-
-        switch (page) {
-        case BEGINNING_PAGE:
-            pageBeginning(mainWindow, event, page);
-            break;
-        case GAME_PAGE:
-            // drawGame(mainWindow);
-            break;
-        case ENDING_PAGE:
-            // drawEnding(mainWindow);
-            break;
-        default:
-            break;
-        }
+        // Event handling. If there are multiple events, they would be handled one by one.
         while (mainWindow.pollEvent(event))
         {
-            // Close the window if the close event is triggered.
-            if (event.type == Event::Closed)
-            {
+            // Close window event
+            if (event.type == sf::Event::Closed) {
                 mainWindow.close();
+                 cout << "\33[34m[INFO]\33[0m window closed." << endl;
             }
-            // Debug output for improving code.
+
+            // Debug output for multiple types of events.
             debugOutput(mainWindow, event);
+            // Handle events for the current page if the page exists.
+            if (isPageExist(currentPage, pages)) {
+                pages[currentPage]->handleEvent(mainWindow, event);
+            }
         }
-        
-        // Draw the trail. Keep it after other drawing and before displaying.
+
+        // To draw next frame, clear the window.
+        mainWindow.clear();
+
+        // Update the current page if it exists.
+        if (isPageExist(currentPage, pages)) {
+            pages[currentPage]->update(mainWindow);
+            pages[currentPage]->render(mainWindow);
+        }
+
+        // Update mouse trail based on mouse movement.
+        mouseMoveTrail(event, mainWindow, trail);
         updateTrail(trail, mainWindow);
 
-        // Display the contents of the window.
+        // after updating the frame, display the window.
         mainWindow.display();
     }
 
-
+    // Pause the app and wait for any input.
     system("pause");
     return 0;
 }

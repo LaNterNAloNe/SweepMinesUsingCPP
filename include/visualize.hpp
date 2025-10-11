@@ -16,7 +16,7 @@ using std::endl;
 /* Visualize initialization */
 void initVisualize(RenderWindow &window, const std::string &title) {
     /* OUTPUT */
-    cout << "\33[36m[INFO]\33[0m Initializing visualization window..." << endl;
+    cout << "\33[34m[INFO]\33[0m Initializing visualization window..." << endl;
 
     /* EXCUTION */
     // Initialize the visualization window.
@@ -31,7 +31,7 @@ void initVisualize(RenderWindow &window, const std::string &title) {
     window.setView(view);
 
     /* OUTPUT */
-    cout << "\33[36m[INFO]\33[0m Visualization window initialized." << endl;
+    cout << "\33[34m[INFO]\33[0m Visualization window initialized." << endl;
 }
 
 /* Mouse move event handler */

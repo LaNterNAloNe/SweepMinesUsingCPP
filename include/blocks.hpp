@@ -1,7 +1,9 @@
 // This file contains the definition of the Block class.
 #pragma once
 
+#include "visualize.hpp"
 #include <vector>
+#include <memory>
 using std::vector;
 
 #define SAFE 0
@@ -16,10 +18,15 @@ public:
     void reveal() { revealed = true; };
     bool isRevealed() const { return revealed; };
     short getType() const { return type; }
+    void setPosition(sf::FloatRect position) { this->position = position; };
+    sf::FloatRect getPosition() const { return position; };
 
 protected:
     bool revealed; // Whether this block has been revealed.
     short type; // The type of this block, which can be SAFE, MINE or UNKNOWN.
+
+    sf::FloatRect position; // The position of this block in the game board.
+// define friend function to access private member
 };
 
 
@@ -39,4 +46,29 @@ class CMineBlock : public CBlock {
 public:
     CMineBlock() : CBlock() { type = MINE; };
     void explode() { /* Code to handle explosion */ };
+};
+
+// Gameboard class
+class CGameBoard
+{
+public:
+    // Initialize the game board.
+    void initialize(int boardSizeX = 10, int boardSizeY = 10);
+
+    // Update the game board.
+    void update();
+
+    // Render the game board.
+    void render(sf::RenderWindow &window);
+
+private:
+    // Game board size. (Default 10x10)
+    int boardSizeX;
+    int boardSizeY;
+
+    // Game board blocks. (Unknown size, waiting for initialization)
+    // Here, use unique_ptr to manage the memory of the blocks.
+    std::vector<std::vector<std::unique_ptr<CBlock>>> blocks;
+    // Game board area.
+    sf::FloatRect boardArea;
 };

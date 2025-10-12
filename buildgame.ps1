@@ -1,3 +1,5 @@
+echo "Building the game..."
+
 # Build the game.
 # 切换到 source 目录
 Set-Location "source"

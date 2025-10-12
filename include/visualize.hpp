@@ -17,11 +17,19 @@ using std::endl;
 #define VIRTUAL_WINDOW_SIZE_Y 1080
 
 // Get the area of a button using Marco Function
-#define MAKE_AREA(x, y, size) sf::FloatRect( \
+// ##Square
+#define MAKE_AREA_SQUARE(x, y, size) sf::FloatRect( \
     (x) - (size) / 2.f,                      \
     (y) - (size) / 2.f,                      \
     (size),                                  \
     (size))
+// ##Rectangle
+#define MAKE_AREA_RECT(x, y, width, height) sf::FloatRect( \
+    (x) - (width) / 2.f,                     \
+    (y) - (height) / 2.f,                    \
+    (width),                                 \
+    (height))
+
 
 /* Visualize initialization */
 void initVisualize(RenderWindow &window, const std::string &title);
@@ -53,9 +61,19 @@ enum Align {
     CENTER = 2,
 };
 
+// #Rectangle
 void drawRectangle(RenderWindow &window, float x1, float y1, float x2, float y2, sf::Color color);
-void drawText(sf::RenderWindow &window, float x, float y, unsigned int fontSize, const std::string &textString, sf::Color color, const int align = CENTER);
-bool drawTextureWithPath(RenderWindow &window, float x, float y, float size, Texture &texture, const std::string &path);
 
+// #Text
+sf::FloatRect makeTextArea(const sf::Text &text);
+sf::Text createTextObject(const std::string &content, unsigned int fontSize, sf::Color color = sf::Color::Black, int align = CENTER, 
+    sf::Vector2f position = sf::Vector2f(0.f, 0.f), const char *fontpath = "font.ttf");
+void drawText(sf::RenderWindow &window, const sf::Text &text);
+
+// #Texture
+bool drawTextureWithPath(RenderWindow &window, float x, float y, float size, const std::string &path);
+bool preloadTexture(const std::string &path);
+bool drawCachedTexture(RenderWindow& window, float x, float y, float size, const std::string& path);
+void clearTextureCache();
 
 

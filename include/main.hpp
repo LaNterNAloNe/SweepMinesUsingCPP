@@ -8,6 +8,7 @@
 #include "debug.hpp"
 #include "visualize.hpp"
 #include "PageBeginning.hpp"
+#include "PageGame.hpp"
 
 using std::cin;
 using std::cout;

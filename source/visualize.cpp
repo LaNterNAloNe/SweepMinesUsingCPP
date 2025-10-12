@@ -37,8 +37,9 @@ void mouseMoveTrail(sf::Event &event, sf::RenderWindow &window, std::vector<Trai
         return;
     }
 
-    // Ignore mouse button events, or code would try to read undefined member mouseMove.
-    if (event.type == Event::MouseButtonPressed || event.type == Event::MouseButtonReleased)
+    // Ignore mouse button or key events, or code would try to read undefined member mouseMove.
+    if (event.type == Event::MouseButtonPressed || event.type == Event::MouseButtonReleased 
+        || event.type == Event::KeyPressed || event.type == Event::KeyReleased)
     {
         return;
     }
@@ -160,6 +161,7 @@ int isMouseClickInArea(sf::RenderWindow &window, const sf::Event &event, sf::Flo
 
 
 /* Drawing function */
+// #Rectangle
 void drawRectangle(RenderWindow &window, float x1, float y1, float x2, float y2, sf::Color color)
 {
     // Draw a rectangle with the given coordinates and color.
@@ -171,48 +173,85 @@ void drawRectangle(RenderWindow &window, float x1, float y1, float x2, float y2,
     window.draw(rectangle);
 }
 
-void drawText(sf::RenderWindow &window, float x, float y, unsigned int fontSize, const std::string &textString, sf::Color color, const int align)
+// #Text
+sf::FloatRect makeTextArea(const sf::Text &text)
 {
-    // Load font if not already loaded.
+    sf::FloatRect bounds = text.getLocalBounds();
+    float width = bounds.width;
+    float height = bounds.height;
+    sf::Vector2f position = text.getPosition();
+
+    return sf::FloatRect(position.x - width / 2.f, position.y - height / 2.f, width, height);
+}
+
+sf::Text createTextObject(
+    const std::string &content, // Text content to display.
+    unsigned int fontSize, // Font size for the text.
+    sf::Color color, // Color of the text.
+    int align, // 0=CENTER, 1=LEFT, 2=RIGHT
+    sf::Vector2f position,
+    const char *fontpath // Path to the font file.
+)
+{
+    // Load font if not loaded yet.
     static sf::Font font;
     static bool fontLoaded = false;
+
     if (!fontLoaded)
     {
-        if (!font.loadFromFile("../font/font.ttf"))
+        if (!font.loadFromFile("../font/" + std::string(fontpath)))
         {
-            std::cout << "\33[31m[ERROR]\33[0m Failed to load font 'font.ttf'." << std::endl;
-            return;
+            std::cout << "\33[31m[ERROR]\33[0m Failed to load font '" << fontpath << "'." << std::endl;
+            return sf::Text(); // return empty text object if failed to load font.
         }
         fontLoaded = true;
     }
 
-    // Create text object.
+    // Create a text object with the given parameters.
     sf::Text text;
     text.setFont(font);
-    text.setString(textString);
-    text.setCharacterSize(fontSize); // 直接使用像素单位
+    text.setString(content);
+    text.setCharacterSize(fontSize);
     text.setFillColor(color);
 
-    // Calculate text position based on alignment.
-    sf::FloatRect textRect = text.getLocalBounds();
+    // Set the origin of the text to its center.
+    sf::FloatRect bounds = text.getLocalBounds();
+    switch (align)
+    {
+    case LEFT: // align left
+        text.setOrigin(bounds.left, bounds.top + bounds.height / 2.f);
+        break;
+    case RIGHT: // align right
+        text.setOrigin(bounds.left + bounds.width, bounds.top + bounds.height / 2.f);
+        break;
+    default: // align center
+        text.setOrigin(bounds.left + bounds.width / 2.f, bounds.top + bounds.height / 2.f);
+        break;
+    }
 
-    // Set origin based on alignment.
-    if (align == LEFT)
-        text.setOrigin(textRect.left, textRect.top + textRect.height / 2.0f);
-    else if (align == RIGHT)
-        text.setOrigin(textRect.left + textRect.width, textRect.top + textRect.height / 2.0f);
-    else // Default to center alignment.
-        text.setOrigin(textRect.left + textRect.width / 2.0f, textRect.top + textRect.height / 2.0f);
+    // finally, set the position of the text.
+    text.setPosition(position);
+    return text;
+}
 
-    // Set position.
-    text.setPosition(x, y);
-
+void drawText(sf::RenderWindow &window, const sf::Text &text)
+{
     // Draw the text.
     window.draw(text);
 }
 
-bool drawTextureWithPath(sf::RenderWindow &window, float x, float y, float size, sf::Texture &texture, const std::string &path)
+// #Texture
+
+// define texture cache as global variable
+std::map<std::string, sf::Texture> textureCache;
+
+// Draw texture using path directly. (Not recommended unless necessary)
+// It will directly load texture from file and draw it, which causes low performance.
+bool drawTextureWithPath(sf::RenderWindow &window, float x, float y, float size, const std::string &path)
 {
+    // Create a texture object.
+    sf::Texture texture;
+    
     // Judge if size is valid.
     if (size <= 0)
     {
@@ -249,4 +288,55 @@ bool drawTextureWithPath(sf::RenderWindow &window, float x, float y, float size,
     // Draw sprite
     window.draw(sprite);
     return true;
+}
+
+// Preload texture into cache.
+// It will load texture from file and store it in cache, which can be used later.
+// it is worth noting that when cached textures won't be used anymore,
+// it is recommended to remove them from cache to free up memory.
+bool preloadTexture(const std::string &path)
+{
+    sf::Texture texture;
+    if (!texture.loadFromFile("../material/" + path))
+    {
+        std::cout << "\33[31m[ERROR]\33[0m Failed to load texture: " << path << std::endl;
+        return false;
+    }
+    textureCache[path] = std::move(texture);
+    return true;
+}
+
+// Draw texture from cache.
+// It will draw texture from cache if it exists, otherwise it will return false.
+bool drawCachedTexture(sf::RenderWindow &window, float x, float y, float size, const std::string &path)
+{
+    // find texture in cache
+    auto it = textureCache.find(path);
+    if (it == textureCache.end())
+    {
+        std::cout << "\33[31m[ERROR]\33[0m Texture not preloaded: " << path << std::endl;
+        return false;
+    }
+
+    // get texture from cache
+    const sf::Texture &texture = it->second;
+    sf::Vector2u originalSize = texture.getSize();
+    float scaleFactor = size / static_cast<float>(originalSize.x);
+
+    // create sprite and apply scaling
+    sf::Sprite sprite(texture);
+    sprite.setScale(scaleFactor, scaleFactor);
+    sprite.setOrigin(originalSize.x / 2.f, originalSize.y / 2.f);
+    sprite.setPosition(x, y);
+
+    // draw sprite
+    window.draw(sprite);
+    return true;
+}
+
+// Clear texture cache.
+// It will clear all textures in cache, freeing up memory.
+void clearTextureCache()
+{
+    textureCache.clear();
 }

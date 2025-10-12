@@ -7,6 +7,10 @@
 
 #include "SFML/Graphics.hpp"
 #include <memory>
+#include <iostream>
+
+using std::cout;
+using std::endl;
 
 enum PageType
 {
@@ -24,11 +28,13 @@ public:
     // handleEvent: Handle user input events for the page.
     // update: Update the state of the page.
     // render: Draw the page on the window.
-    virtual void handleEvent(sf::RenderWindow &window, sf::Event &event) = 0;
+    virtual void handleEvent(sf::RenderWindow &window, sf::Event &event, int &currentPage, const std::map<int, std::unique_ptr<CPage>> &pages) = 0;
     virtual void update(sf::RenderWindow &window) = 0;
     virtual void render(sf::RenderWindow &window) = 0;
     virtual ~CPage() {}
 };
 
+
 const char *getPageName(const int page);
 bool isPageExist(const int currentPage, const std::map<int, std::unique_ptr<CPage>> &pages);
+void changePage(sf::RenderWindow &window, int &currentPage, int newPage, const std::map<int, std::unique_ptr<CPage>> &pages);

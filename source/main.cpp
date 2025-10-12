@@ -11,15 +11,18 @@ int main()
     initVisualize(mainWindow, "SweepMine");
 
     std::vector<TrailPoint> trail;
-    int currentPage = BEGINNING_PAGE;
-    cout << "\33[34m[INFO]\33[0m Current page: " << getPageName(currentPage) << endl;
 
     /* Page management */
     // Map to store unique pointers to different pages, using C++ features.
     std::map<int, std::unique_ptr<CPage>> pages;
+    int currentPage = BEGINNING_PAGE;
+    cout << "\33[34m[INFO]\33[0m Current page: " << getPageName(currentPage) << endl;
+
+    // Page Beginning
     pages[BEGINNING_PAGE] = std::make_unique<CPageBeginning>();
+    // Page Game
+    pages[GAME_PAGE] = std::make_unique<CPageGame>();
     // The following pages are not implemented yet, but will be added in the future.
-    // pages[GAME_PAGE] = std::make_unique<CPageGame>();
     // pages[ENDING_PAGE] = std::make_unique<CPageEnding>();
 
     /* Main game loop */
@@ -41,7 +44,11 @@ int main()
             debugOutput(mainWindow, event);
             // Handle events for the current page if the page exists.
             if (isPageExist(currentPage, pages)) {
-                pages[currentPage]->handleEvent(mainWindow, event);
+                pages[currentPage]->handleEvent(mainWindow, event, currentPage, pages);
+            } 
+            else {
+                cout << "\33[31m[ERROR]\33[0m Page " << getPageName(currentPage) << " does not exist." << endl;
+                currentPage = BEGINNING_PAGE;
             }
         }
 
@@ -53,6 +60,10 @@ int main()
             pages[currentPage]->update(mainWindow);
             pages[currentPage]->render(mainWindow);
         }
+        else {
+            cout << "\33[31m[ERROR]\33[0m Page " << getPageName(currentPage) << " does not exist." << endl;
+            currentPage = BEGINNING_PAGE;
+        }
 
         // Update mouse trail based on mouse movement.
         mouseMoveTrail(event, mainWindow, trail);
@@ -62,7 +73,7 @@ int main()
         mainWindow.display();
     }
 
-    // Pause the app and wait for any input.
-    system("pause");
+    // // Pause the app and wait for any input.
+    // system("pause");
     return 0;
 }

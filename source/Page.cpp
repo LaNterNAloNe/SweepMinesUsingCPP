@@ -21,3 +21,16 @@ bool isPageExist(const int currentPage, const std::map<int, std::unique_ptr<CPag
 {
     return pages.find(currentPage) != pages.end();
 }
+
+void changePage(sf::RenderWindow &window, int &currentPage, int newPage, const std::map<int, std::unique_ptr<CPage>> &pages)
+{
+    if (isPageExist(newPage, pages))
+    {
+        currentPage = newPage;
+        cout << "\33[34m[INFO]\33[0m Switching to " << getPageName(currentPage) << " page." << endl;
+    }
+    else
+    {
+        cout << "\33[31m[ERROR]\33[0m Page " << getPageName(newPage) << " does not exist." << endl;
+    }
+}

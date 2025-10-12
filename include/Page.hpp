@@ -29,8 +29,8 @@ public:
     // update: Update the state of the page.
     // render: Draw the page on the window.
     virtual void handleEvent(sf::RenderWindow &window, sf::Event &event, int &currentPage, const std::map<int, std::unique_ptr<CPage>> &pages) = 0;
-    virtual void update(sf::RenderWindow &window) = 0;
-    virtual void render(sf::RenderWindow &window) = 0;
+    virtual void update(sf::RenderWindow &window, sf::Event event) = 0;
+    virtual void render(sf::RenderWindow &window, sf::Event event) = 0;
     virtual ~CPage() {}
 };
 

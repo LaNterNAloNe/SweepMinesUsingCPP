@@ -57,8 +57,8 @@ int main()
 
         // Update the current page if it exists.
         if (isPageExist(currentPage, pages)) {
-            pages[currentPage]->update(mainWindow);
-            pages[currentPage]->render(mainWindow);
+            pages[currentPage]->update(mainWindow, event);
+            pages[currentPage]->render(mainWindow, event);
         }
         else {
             cout << "\33[31m[ERROR]\33[0m Page " << getPageName(currentPage) << " does not exist." << endl;

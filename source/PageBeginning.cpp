@@ -35,7 +35,7 @@ void CPageBeginning::handleEvent(sf::RenderWindow &window, sf::Event &event, int
 
 
 /* Update beginning page */
-void CPageBeginning::update(sf::RenderWindow &window)
+void CPageBeginning::update(sf::RenderWindow &window, sf::Event event)
 {
     static hoverState lastHoverState = NONE;
 
@@ -55,7 +55,7 @@ void CPageBeginning::update(sf::RenderWindow &window)
 
 
 /* Draw begining of the game */
-void CPageBeginning::render(sf::RenderWindow &window)
+void CPageBeginning::render(sf::RenderWindow &window, sf::Event event)
 {
     // Draw standard background.
     sf::Color tmpColor = sf::Color::White;

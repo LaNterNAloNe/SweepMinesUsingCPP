@@ -72,8 +72,7 @@ void drawText(sf::RenderWindow &window, const sf::Text &text);
 
 // #Texture
 bool drawTextureWithPath(RenderWindow &window, float x, float y, float size, const std::string &path);
-bool preloadTexture(const std::string &path);
-bool drawCachedTexture(RenderWindow& window, float x, float y, float size, const std::string& path);
-void clearTextureCache();
-
-
+void preloadTexture(const std::string &path, std::map<std::string, sf::Texture> &textureCache);
+bool drawCachedTexture(RenderWindow &window, float x, float y, float size, const std::string &pat,
+                       std::map<std::string, sf::Texture> &textureCache);
+void freePreloadTextureCache(std::map<std::string, sf::Texture> &TextureCache);

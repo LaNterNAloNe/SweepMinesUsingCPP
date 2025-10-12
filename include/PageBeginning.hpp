@@ -22,8 +22,8 @@ class CPageBeginning : public CPage
 public:
     // See the comments in Page.hpp for the function's functionality.
     void handleEvent(sf::RenderWindow &window, sf::Event &event, int &currentPage, const std::map<int, std::unique_ptr<CPage>> &pages) override;
-    void update(sf::RenderWindow &window) override;
-    void render(sf::RenderWindow &window) override;
+    void update(sf::RenderWindow &window, sf::Event event) override;
+    void render(sf::RenderWindow &window, sf::Event event) override;
     ~CPageBeginning() override {}
 private:
     // Hover state of the beginning page. (To decide which button's apperance changes)

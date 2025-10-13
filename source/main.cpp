@@ -40,11 +40,12 @@ int main()
             // Close window event
             if (event.type == sf::Event::Closed) {
                 mainWindow.close();
-                 cout << "\33[34m[INFO]\33[0m window closed." << endl;
+                cout << "\33[34m[INFO]\33[0m window closed." << endl;
             }
 
             // Debug output for multiple types of events.
             debugOutput(mainWindow, event);
+            
             // Handle events for the current page if the page exists.
             if (isPageExist(currentPage, pages)) {
                 pages[currentPage]->handleEvent(mainWindow, event, currentPage, pages);
@@ -59,18 +60,23 @@ int main()
         mainWindow.clear();
 
         // Update the current page if it exists.
-        if (isPageExist(currentPage, pages)) {
+        if (isPageExist(currentPage, pages)) 
+        {
             pages[currentPage]->update(mainWindow, event);
             pages[currentPage]->render(mainWindow, event);
         }
-        else {
+        else 
+        {
             cout << "\33[31m[ERROR]\33[0m Page " << getPageName(currentPage) << " does not exist." << endl;
             currentPage = BEGINNING_PAGE;
         }
 
-        // Update mouse trail based on mouse movement.
-        mouseMoveTrail(event, mainWindow, trail);
-        updateTrail(trail, mainWindow);
+        // Update mouse trail based on mouse movement. (If showMouseTrail enabled)
+        if (globalSettings.showMouseTrail) 
+        {
+            mouseMoveTrail(event, mainWindow, trail);
+            updateTrail(trail, mainWindow);
+        }
 
         // after updating the frame, display the window.
         mainWindow.display();

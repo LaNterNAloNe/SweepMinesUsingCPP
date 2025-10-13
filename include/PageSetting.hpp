@@ -19,9 +19,26 @@ class CGlobalGameSetting
 {
 public:
     // Default constructor.
-    CGlobalGameSetting() : theme(LIGHT) {}
+    CGlobalGameSetting() // Representing default settings.
+    {
+        // Visual settings
+        theme = LIGHT;
+        fullScreen = false;
+        showFPS = false;
+        showMouseTrail = true;
 
-    short theme;
+        // Game settings
+        useWin7MineSweeperFeature = true;
+    }
+
+    // Visual settings
+    short theme; // Visual theme.
+    bool fullScreen; // Whether to use full screen.
+    bool showFPS; // Whether to show FPS.
+    bool showMouseTrail; // Whether to show mouse tail.
+
+    // Game settings
+    bool useWin7MineSweeperFeature; // Use Win7 MineSweeper feature: Fast reveal.
 };
 
 // Set extern global game settings. main.cpp define a instance, so that each cpp can apply to it.

@@ -42,7 +42,7 @@ public:
     virtual int getMineCountAround() const { return -1; }
 
     // Explode this block.
-    void explode() { exploded = true; }
+    virtual void explode() { return; }
     virtual bool isExplode() const { return exploded; }
 
 protected:
@@ -77,7 +77,7 @@ public:
     short getType() const override { return type; }
     void setMineCountAround(int count, int x, int y, int boardSizeX, int boardSizeY) override { return; }
     int getMineCountAround() const override { return -1; }
-    void explode() { /* Code to handle explosion */ };
+    void explode() override { exploded = true; }
 };
 
 
@@ -151,10 +151,8 @@ public:
     // get block type
     short getBlockType(int x, int y) 
     { 
-        if (x >= 0 && x < boardSizeX && y >= 0 && y < boardSizeY) 
-            return blocks[x][y]->getType(); 
-        else 
-            return UNKNOWN; 
+        if (x >= 0 && x < boardSizeX && y >= 0 && y < boardSizeY) return blocks[x][y]->getType(); 
+        else return UNKNOWN; 
     }
 
     // find mine count around

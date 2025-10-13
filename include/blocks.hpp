@@ -142,8 +142,8 @@ public:
         if (blocks[x][y]->getType() == MINE) blocks[x][y]->explode(), revealedMinesCount++, gameStatus = MINE_REVEALED; 
     }
 
-    // Reveal nearby safe blocks if revealed a block with number of mines around.
-    void revealBlocksNearbyIfMinesAroundFlagged(int x, int y);
+    // Reveal nearby safe blocks if revealed a block with number of mines around equal to flagged blocks around.
+    void revealBlocksNearbyIfNearbyFlagsEqualNum(int x, int y);
 
     // Get revealed block counts
     int getRevealedBlocksCount() const { return revealedBlocksCount; }

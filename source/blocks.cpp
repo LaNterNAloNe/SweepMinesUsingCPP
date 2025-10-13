@@ -66,7 +66,7 @@ void CGameBoard::handleEvent(sf::RenderWindow &window, sf::Event &event)
             // If the clicked block is a number, check if the number of flagged blocks around is equal to the mine count around.
             if (getBlockType(clickedBlock.x, clickedBlock.y) == NUMBER)
             {
-                revealBlocksNearbyIfMinesAroundFlagged(clickedBlock.x, clickedBlock.y);
+                revealBlocksNearbyIfNearbyFlagsEqualNum(clickedBlock.x, clickedBlock.y);
             }
         }
     }
@@ -315,7 +315,7 @@ int CGameBoard::getFlaggedBlocksCountAround(int x, int y)
 }
 
 // Reveal nearby safe blocks if revealed a block with number of mines around.
-void CGameBoard::revealBlocksNearbyIfMinesAroundFlagged(int x, int y)
+void CGameBoard::revealBlocksNearbyIfNearbyFlagsEqualNum(int x, int y)
 {
     // Check if the block is revealed and has number of mines around.
     if (isBlockRevealed(x, y) == false || getBlockType(x, y) != NUMBER)

@@ -32,24 +32,23 @@ void CGameBoard::handleEvent(sf::RenderWindow &window, sf::Event &event)
 
     cout << "Clicked block: (" << clickedBlock.x << ", " << clickedBlock.y << ")" << endl;
 
+    // Return if get invalid clicked block coordinate.
+    if (clickedBlock.x == -1 || clickedBlock.y == -1)
+    {
+        return;
+    }
+
     // If the clicked block is valid, handle the event.
     if (event.mouseButton.button == sf::Mouse::Left)
     {
         // Left click.
-        if (clickedBlock.x != -1 && clickedBlock.y != -1 &&
-            isBlockRevealed(clickedBlock.x, clickedBlock.y) == false &&
+        // If the clicked block is not revealed and not flagged, try to reveal and handle it.
+        if (isBlockRevealed(clickedBlock.x, clickedBlock.y) == false &&
             isBlockFlagged(clickedBlock.x, clickedBlock.y) == false)
         {
-            // If the clicked block is a mine, game over.
-            if (getBlockType(clickedBlock.x, clickedBlock.y) == MINE)
+            if (getBlockType(clickedBlock.x, clickedBlock.y) == EMPTY)
             {
-                gameStatus = MINE_REVEALED;
-                revealAllMines();
-            }
-            // If the clicked block is empty, reveal nearby safe blocks.
-            else if (getBlockType(clickedBlock.x, clickedBlock.y) == EMPTY)
-            {
-                revealNearbySafeBlock(clickedBlock.x, clickedBlock.y);
+                revealAroundSafeBlock(clickedBlock.x, clickedBlock.y);
             }
             // If the clicked block is a number, just reveal it.
             else
@@ -60,12 +59,21 @@ void CGameBoard::handleEvent(sf::RenderWindow &window, sf::Event &event)
                 revealBlock(clickedBlock.x, clickedBlock.y);
             }
         }
+        // If the clicked block is already revealed, try to judge that if unrevealed mines are flagged, 
+        // if so, reveal nearby safe blocks.
+        else if (isBlockRevealed(clickedBlock.x, clickedBlock.y) == true)
+        {
+            // If the clicked block is a number, check if the number of flagged blocks around is equal to the mine count around.
+            if (getBlockType(clickedBlock.x, clickedBlock.y) == NUMBER)
+            {
+                revealBlocksNearbyIfMinesAroundFlagged(clickedBlock.x, clickedBlock.y);
+            }
+        }
     }
     else if (event.mouseButton.button == sf::Mouse::Right)
     {
         // Right click.
-        if (clickedBlock.x != -1 && clickedBlock.y != -1 &&
-            isBlockRevealed(clickedBlock.x, clickedBlock.y) == false)
+        if (isBlockRevealed(clickedBlock.x, clickedBlock.y) == false)
         {
             // If the clicked block is not flagged, flag it.
             if (isBlockFlagged(clickedBlock.x, clickedBlock.y) == false)
@@ -87,18 +95,23 @@ void CGameBoard::update()
     {
         gameStatus = WON;
         isGamewon = true;
+        revealAllMineBlocks();
         cout << "\33[34m[INFO]\33[0m Game \033[32mWon.\033[0m" << endl;
     } 
     else if (gameStatus == MINE_REVEALED)
     {
         gameStatus = LOST;
         isGameLost = true;
+        revealAllMineBlocks();
         cout << "\33[34m[Info]\33[0m Game \033[31mlost.\033[0m" << endl;
     } 
 }
 
 void CGameBoard::render(sf::RenderWindow &window, sf::Event &event)
 {
+    // According to global setting to decide which theme to use.
+    std::string theme = (globalSettings.theme == DARK) ? "dark_theme" : "light_theme";
+
     // Render the game board, using cached texture. (Must)
     for (int i = 0; i < boardSizeX; ++i)
     {
@@ -110,15 +123,15 @@ void CGameBoard::render(sf::RenderWindow &window, sf::Event &event)
             {
                 if (isMouseStayInArea(window, event, blockPosition) && !blocks[i][j]->isFlagged())
                 {
-                    drawCachedTexture(window, blockPosition.left + blockPosition.width / 2, blockPosition.top + blockPosition.height / 2, blockPosition.width, "page_game/block_hover.png", gameBoardTexture);
+                    drawCachedTexture(window, blockPosition.left + blockPosition.width / 2, blockPosition.top + blockPosition.height / 2, blockPosition.width, "page_game/" + theme + "/block_hover.png", gameBoardTexture);
                 }
                 else if (!isMouseStayInArea(window, event, blockPosition) && !blocks[i][j]->isFlagged())
                 {
-                    drawCachedTexture(window, blockPosition.left + blockPosition.width / 2, blockPosition.top + blockPosition.height / 2, blockPosition.width, "page_game/block.png", gameBoardTexture);
+                    drawCachedTexture(window, blockPosition.left + blockPosition.width / 2, blockPosition.top + blockPosition.height / 2, blockPosition.width, "page_game/" + theme + "/block.png", gameBoardTexture);
                 }
                 else if (blocks[i][j]->isFlagged())
                 {
-                    drawCachedTexture(window, blockPosition.left + blockPosition.width / 2, blockPosition.top + blockPosition.height / 2, blockPosition.width, "page_game/flag.png", gameBoardTexture);
+                    drawCachedTexture(window, blockPosition.left + blockPosition.width / 2, blockPosition.top + blockPosition.height / 2, blockPosition.width, "page_game/" + theme + "/flag.png", gameBoardTexture);
                 }
             }
 
@@ -127,7 +140,7 @@ void CGameBoard::render(sf::RenderWindow &window, sf::Event &event)
             {
                 if (blocks[i][j]->getType() == MINE)
                 {
-                    drawCachedTexture(window, blockPosition.left + blockPosition.width / 2, blockPosition.top + blockPosition.height / 2, blockPosition.width, "page_game/mine.png", gameBoardTexture);
+                    drawCachedTexture(window, blockPosition.left + blockPosition.width / 2, blockPosition.top + blockPosition.height / 2, blockPosition.width, "page_game/" + theme + (blocks[i][j]->isExplode() ? "/mine.png" : "/mine_unrevealed.png"), gameBoardTexture);
                 }
                 else if (blocks[i][j]->getType() == NUMBER || blocks[i][j]->getType() == EMPTY)
                 {
@@ -170,7 +183,7 @@ void CGameBoard::setMineCountAroundForBlock(int x, int y)
 }
 
 // Reveal nearby safe blocks starting from (startX, startY). BFS algorithm.
-void CGameBoard::revealNearbySafeBlock(int startX, int startY)
+void CGameBoard::revealAroundSafeBlock(int startX, int startY)
 {
     cout << "\33[32m[DEBUG]\33[0m Reveal nearby safe block at (" << startX << ", " << startY << ")" << endl;
     // Check if starting position is valid
@@ -243,6 +256,80 @@ void CGameBoard::revealNearbySafeBlock(int startX, int startY)
         }
     }
 }
+
+// Reveal nearby blocks if nearby flagged blocks equal to the number of the clicked block.
+void CGameBoard::revealNearbyUnflaggedBlock(int x, int y)
+{
+    // Reveal nearby blocks.
+    for (int i = x - 1; i <= x + 1; i++)
+    {
+        for (int j = y - 1; j <= y + 1; j++)
+        {
+            if (i >= 0 && i < boardSizeX && j >= 0 && j < boardSizeY && !(i == x && j == y))
+            {
+                // If neighbor is not revealed and is empty or number, add to queue.
+                if (blocks[i][j]->isRevealed() == false && blocks[i][j]->isFlagged() == false )
+                {
+                    if (blocks[i][j]->getType() == NUMBER || blocks[i][j]->getType() == MINE)
+                    {
+                        // If it is number or mine, just reveal it.
+                        revealBlock(i, j);
+                    }
+                    else if (blocks[i][j]->getType() == EMPTY)
+                    {
+                        // If it is empty, reveal it and its surrounding safe blocks.
+                        revealAroundSafeBlock(i, j);
+                    }
+                    else; // Do nothing.
+                }
+                else { // If neighbor is revealed or flagged, skip.
+                    // Do nothing.
+                }
+            }
+        }
+    }
+}
+
+// Get flagged blocks count around
+int CGameBoard::getFlaggedBlocksCountAround(int x, int y)
+{
+    // Check if the block is out of bounds.
+    if (x < 0 || x >= boardSizeX || y < 0 || y >= boardSizeY)
+        return 0;
+    
+    int flaggedBlocksCount = 0;
+    for (int i = x - 1; i <= x + 1; i++)
+    {
+        for (int j = y - 1; j <= y + 1; j++)
+        {
+            if (i >= 0 && i < boardSizeX && j >= 0 && j < boardSizeY && !(i == x && j == y))
+            {
+                if (blocks[i][j]->isFlagged())
+                {
+                    flaggedBlocksCount++;
+                }
+            }
+        }
+    }
+    return flaggedBlocksCount;
+}
+
+// Reveal nearby safe blocks if revealed a block with number of mines around.
+void CGameBoard::revealBlocksNearbyIfMinesAroundFlagged(int x, int y)
+{
+    // Check if the block is revealed and has number of mines around.
+    if (isBlockRevealed(x, y) == false || getBlockType(x, y) != NUMBER)
+        return;
+    
+    // If the number of mines around is equal to the number of flagged blocks around, reveal nearby safe blocks.
+    if (findMineCountAround(x, y) == getFlaggedBlocksCountAround(x, y))
+    {
+        revealNearbyUnflaggedBlock(x, y);
+    }
+    
+}
+
+
 
 void CGameBoard::initialize(int boardSizeX, int boardSizeY, int mineCount)
 {
@@ -376,48 +463,52 @@ sf::Vector2i CGameBoard::getClickedBlockPosition(sf::RenderWindow &window, const
 // Transform the mine count to the texture name.
 const std::string transformMineCountToTextureName(int mineCount)
 {
+    // According to global setting to decide which theme to use.
+    std::string theme = (globalSettings.theme == DARK) ? "dark_theme" : "light_theme";
+
     switch (mineCount)
     {
     case -1:
-        return "page_game/mine.png";
+        return "page_game/" + theme + "/mine.png";
     case 0:
-        return "page_game/empty.png";
+        return "page_game/" + theme + "/empty.png";
     case 1:
-        return "page_game/num1.png";
+        return "page_game/" + theme + "/num1.png";
     case 2:
-        return "page_game/num2.png";
+        return "page_game/" + theme + "/num2.png";
     case 3:
-        return "page_game/num3.png";
+        return "page_game/" + theme + "/num3.png";
     case 4:
-        return "page_game/num4.png";
+        return "page_game/" + theme + "/num4.png";      
     case 5:
-        return "page_game/num5.png";
+        return "page_game/" + theme + "/num5.png";
     case 6:
-        return "page_game/num6.png";
+        return "page_game/" + theme + "/num6.png";
     case 7:
-        return "page_game/num7.png";
+        return "page_game/" + theme + "/num7.png";
     case 8:
-        return "page_game/num8.png";
+        return "page_game/" + theme + "/num8.png";
     default:
-        return "page_game/empty.png";
+        return "page_game/" + theme + "/empty.png";
     }
 }
 
-void CGameBoard::preloadGameBoardTexture()
+void CGameBoard::preloadGameBoardTexture(std::string theme)
 {
-    preloadTexture("page_game/block_hover.png", gameBoardTexture);
-    preloadTexture("page_game/block.png", gameBoardTexture);
-    preloadTexture("page_game/mine.png", gameBoardTexture);
-    preloadTexture("page_game/flag.png", gameBoardTexture);
-    preloadTexture("page_game/empty.png", gameBoardTexture);
-    preloadTexture("page_game/num1.png", gameBoardTexture);
-    preloadTexture("page_game/num2.png", gameBoardTexture);
-    preloadTexture("page_game/num3.png", gameBoardTexture);
-    preloadTexture("page_game/num4.png", gameBoardTexture);
-    preloadTexture("page_game/num5.png", gameBoardTexture);
-    preloadTexture("page_game/num6.png", gameBoardTexture);
-    preloadTexture("page_game/num7.png", gameBoardTexture);
-    preloadTexture("page_game/num8.png", gameBoardTexture);
+    preloadTexture("page_game/" + theme + "/block_hover.png", gameBoardTexture);
+    preloadTexture("page_game/" + theme + "/block.png", gameBoardTexture);
+    preloadTexture("page_game/" + theme + "/mine.png", gameBoardTexture);
+    preloadTexture("page_game/" + theme + "/mine_unrevealed.png", gameBoardTexture);
+    preloadTexture("page_game/" + theme + "/flag.png", gameBoardTexture);
+    preloadTexture("page_game/" + theme + "/empty.png", gameBoardTexture);
+    preloadTexture("page_game/" + theme + "/num1.png", gameBoardTexture);
+    preloadTexture("page_game/" + theme + "/num2.png", gameBoardTexture);
+    preloadTexture("page_game/" + theme + "/num3.png", gameBoardTexture);
+    preloadTexture("page_game/" + theme + "/num4.png", gameBoardTexture);
+    preloadTexture("page_game/" + theme + "/num5.png", gameBoardTexture);
+    preloadTexture("page_game/" + theme + "/num6.png", gameBoardTexture);
+    preloadTexture("page_game/" + theme + "/num7.png", gameBoardTexture);
+    preloadTexture("page_game/" + theme + "/num8.png", gameBoardTexture);
     isTextureLoaded = true;
 }
 

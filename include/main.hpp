@@ -10,6 +10,7 @@
 #include "visualize.hpp"
 #include "PageBeginning.hpp"
 #include "PageGame.hpp"
+#include "PageSetting.hpp"
 
 using std::cin;
 using std::cout;
@@ -25,3 +26,4 @@ void showLicense()
     cout << "Description: A simple minesweeper game." << endl;
     cout << "---------------------------------------------------------" << endl;
 }
+

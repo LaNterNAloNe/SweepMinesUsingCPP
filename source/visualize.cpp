@@ -8,7 +8,7 @@ void initVisualize(RenderWindow &window, const std::string &title) {
     // Initialize the visualization window.
     VideoMode desktopMode = VideoMode::getDesktopMode();
     // Set the window size to 50% of the desktop resolution and set the window unresizable.
-    window.create(VideoMode(desktopMode.width / 2, desktopMode.width / 32 * 9), title, sf::Style::Titlebar | sf::Style::Close);
+    window.create(VideoMode(desktopMode.width / 1.5, desktopMode.width / 1.5 / 16 * 9), title, sf::Style::Titlebar | sf::Style::Close);
 
     // Set virtual coordinate system to 1920x1080 for consistency across different screen resolutions.
     sf::View view(sf::FloatRect(0.f, 0.f, VIRTUAL_WINDOW_SIZE_X, VIRTUAL_WINDOW_SIZE_Y));

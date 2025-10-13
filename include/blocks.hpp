@@ -2,6 +2,7 @@
 #pragma once
 
 #include "visualize.hpp"
+#include "PageSetting.hpp"
 #include <vector>
 #include <memory>
 #include <random>
@@ -39,12 +40,16 @@ public:
     // now define virtual function for different derive class to override
     virtual void setMineCountAround (int count, int x, int y, int boardSizeX, int boardSizeY) { return; }
     virtual int getMineCountAround() const { return -1; }
-    virtual void explode() { return; }
+
+    // Explode this block.
+    void explode() { exploded = true; }
+    virtual bool isExplode() const { return exploded; }
 
 protected:
-    bool revealed; // Whether this block has been revealed.
-    short type; // The type of this block, which can be SAFE, MINE or UNKNOWN
-    bool flagged = false; // Whether this block has been flagged. Defalt false.
+    bool revealed; // Whether this block has been revealed. For each block.
+    short type; // The type of this block, which can be SAFE, MINE or UNKNOWN. For each block.
+    bool flagged = false; // Whether this block has been flagged. Defalt false. For each block.
+    bool exploded = false; // Whether this block has been exploded. Defalt false. Especially for mine block.
 
     sf::FloatRect position; // The position of this block in the game board.
 // define friend function to access private member
@@ -118,6 +123,9 @@ public:
             blocks[x][y]->setFlagged(flagged); 
     }
 
+    // Get flagged blocks count around
+    int getFlaggedBlocksCountAround(int x, int y);
+
     // check if block is revealed
     bool isBlockRevealed(int x, int y) 
     { 
@@ -130,9 +138,12 @@ public:
     // reveal block
     void revealBlock(int x, int y) 
     { 
-        if (x >= 0 && x < boardSizeX && y >= 0 && y < boardSizeY) 
-            blocks[x][y]->reveal(), revealedBlocksCount++; 
+        if (x >= 0 && x < boardSizeX && y >= 0 && y < boardSizeY) blocks[x][y]->reveal(), revealedBlocksCount++; 
+        if (blocks[x][y]->getType() == MINE) blocks[x][y]->explode(), revealedMinesCount++, gameStatus = MINE_REVEALED; 
     }
+
+    // Reveal nearby safe blocks if revealed a block with number of mines around.
+    void revealBlocksNearbyIfMinesAroundFlagged(int x, int y);
 
     // Get revealed block counts
     int getRevealedBlocksCount() const { return revealedBlocksCount; }
@@ -153,22 +164,23 @@ public:
     void setMineCountAroundForBlock(int x, int y);
 
     // reveal all mines
-    void revealAllMines() 
+    void revealAllMineBlocks() 
     { 
         for (int i = 0; i < boardSizeX; i++) 
             for (int j = 0; j < boardSizeY; j++) 
                 if (blocks[i][j]->getType() == MINE) blocks[i][j]->reveal(); 
     }
 
-    // Reveal nearby safe blocks if revealed a empty block
-    void revealNearbySafeBlock(int x, int y);
+    // Reveal surrounding safe blocks if revealed a empty block
+    void revealAroundSafeBlock(int x, int y); // Represent revealing surrrounding safe blocks if revealed a empty block.
+    void revealNearbyUnflaggedBlock(int x, int y); // Represent revealing nearby unflagged blocks if flagged blocks equal to mine blocks around 8 blocks.
 
     // Check if game finished
     bool isGameFinished() { return isGamewon || isGameLost != NONE; }
     bool isMineRevealed() { return isGameLost == MINE_REVEALED; }
 
     // Texture cache
-    void preloadGameBoardTexture();
+    void preloadGameBoardTexture(std::string theme = "light_theme");
     void freeGameBoardTexture();
     bool checkIfTextureLoaded() { return isTextureLoaded; };
 
@@ -179,6 +191,7 @@ public:
         isGameLost = false;
         gameStatus = NONE;
         revealedBlocksCount = 0;
+        revealedMinesCount = 0;
         mineCount = 0;
         blocks.clear();
     }
@@ -199,6 +212,7 @@ private:
 
     // Count revealed blocks
     int revealedBlocksCount;
+    int revealedMinesCount;
     int mineCount;
     bool isGamewon = false;
     bool isGameLost = false;

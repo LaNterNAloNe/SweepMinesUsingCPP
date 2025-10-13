@@ -1,5 +1,8 @@
 #include "../include/main.hpp"
 
+// define global game settings parameter.
+CGlobalGameSetting globalSettings;
+
 int main()
 {
     // Show license that give a brife introduction

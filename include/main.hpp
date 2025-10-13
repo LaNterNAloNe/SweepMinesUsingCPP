@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <memory>
+#include <map>
 #include "Page.hpp"
 #include "blocks.hpp"
 #include "debug.hpp"

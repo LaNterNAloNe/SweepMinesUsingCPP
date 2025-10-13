@@ -4,6 +4,7 @@
 #include "SFML/Graphics.hpp"
 #include <iostream>
 #include <cmath>
+#include <map>
 using sf::Event;
 using sf::RenderWindow;
 using sf::Sprite;

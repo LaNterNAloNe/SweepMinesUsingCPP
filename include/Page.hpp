@@ -8,6 +8,7 @@
 #include "SFML/Graphics.hpp"
 #include <memory>
 #include <iostream>
+#include <map> // include map header for cross-platform compatibility
 
 using std::cout;
 using std::endl;

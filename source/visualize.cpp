@@ -161,7 +161,18 @@ int isMouseClickInArea(sf::RenderWindow &window, const sf::Event &event, sf::Flo
 
 
 /* Drawing function */
+// #Square
+sf::FloatRect makeSquareArea(float x, float y, float size)
+{
+    return sf::FloatRect(x - size / 2.f, y - size / 2.f, size, size);
+}
+
 // #Rectangle
+sf::FloatRect makeRectangleArea(float x, float y, float width, float height)
+{
+    return sf::FloatRect(x - width / 2.f, y - height / 2.f, width, height);
+}
+// Draw Rectangle, include square.
 void drawRectangle(RenderWindow &window, float x1, float y1, float x2, float y2, sf::Color color)
 {
     // Draw a rectangle with the given coordinates and color.
@@ -294,7 +305,7 @@ bool drawTextureWithPath(sf::RenderWindow &window, float x, float y, float size,
 // It will load texture from file and store it in cache, which can be used later.
 // it is worth noting that when cached textures won't be used anymore,
 // it is recommended to remove them from cache to free up memory.
-void preloadTexture(const std::string &path, std::map<std::string, sf::Texture> &textureCache)
+void preloadTexture(const std::string &path, TextureCache &textureCache)
 {
     sf::Texture texture;
     if (!texture.loadFromFile("../material/" + path))
@@ -309,7 +320,7 @@ void preloadTexture(const std::string &path, std::map<std::string, sf::Texture> 
 // Draw texture from cache.
 // It will draw texture from cache if it exists, otherwise it will return false.
 bool drawCachedTexture(sf::RenderWindow &window, float x, float y, float size, const std::string &path, 
-    std::map<std::string, sf::Texture> &textureCache)
+    TextureCache &textureCache)
 {
     // find texture in cache
     auto it = textureCache.find(path);
@@ -337,10 +348,10 @@ bool drawCachedTexture(sf::RenderWindow &window, float x, float y, float size, c
 }
 
 // Free preload texture cache.
-void freePreloadTextureCache(std::map<std::string, sf::Texture> &TextureCache)
+void freePreloadTextureCache(TextureCache &textureCache)
 {
     // Clear texture cache
-    TextureCache.clear();
+    textureCache.clear();
 
     // output
     std::cout << "\033[32m[INFO]\033[0m Texture cache cleared." << std::endl;

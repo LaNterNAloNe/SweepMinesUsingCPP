@@ -81,7 +81,7 @@ class CGameBoard
 {
 public:
     // Initialize the game board.
-    void initialize(int boardSizeX = 10, int boardSizeY = 10, int mineCount = 10);
+    void initialize(int boardSizeX = 30, int boardSizeY = 20, int mineCount = 80);
 
     // Handle game event
     void handleEvent(sf::RenderWindow &window, sf::Event &event);
@@ -96,29 +96,55 @@ public:
     sf::FloatRect getBoardArea() const { return boardArea; }
 
     // get block's size in board
-    int getBlockSize() const { return blocks[0][0]->getPosition().width; }
+    float getBlockSize() const { return blocks[0][0]->getPosition().width; }
 
     // get board size
     int getBoardSizeX() const { return boardSizeX; }
     int getBoardSizeY() const { return boardSizeY; }
 
     // check if block is flagged
-    bool isBlockFlagged(int x, int y) { if (x >= 0 && x < boardSizeX && y >= 0 && y < boardSizeY) return blocks[x][y]->isFlagged(); else return false; }
+    bool isBlockFlagged(int x, int y) 
+    { 
+        if (x >= 0 && x < boardSizeX && y >= 0 && y < boardSizeY) 
+            return blocks[x][y]->isFlagged(); 
+        else 
+            return false; 
+    }
     
     // set flagged state for block
-    void setBlockFlagged(int x, int y, bool flagged) { if (x >= 0 && x < boardSizeX && y >= 0 && y < boardSizeY) blocks[x][y]->setFlagged(flagged); }
+    void setBlockFlagged(int x, int y, bool flagged) 
+    { 
+        if (x >= 0 && x < boardSizeX && y >= 0 && y < boardSizeY) 
+            blocks[x][y]->setFlagged(flagged); 
+    }
 
     // check if block is revealed
-    bool isBlockRevealed(int x, int y) { if (x >= 0 && x < boardSizeX && y >= 0 && y < boardSizeY) return blocks[x][y]->isRevealed(); else return true; }
+    bool isBlockRevealed(int x, int y) 
+    { 
+        if (x >= 0 && x < boardSizeX && y >= 0 && y < boardSizeY) 
+            return blocks[x][y]->isRevealed(); 
+        else 
+            return true; 
+    }
 
     // reveal block
-    void revealBlock(int x, int y) { if (x >= 0 && x < boardSizeX && y >= 0 && y < boardSizeY) blocks[x][y]->reveal(), revealedBlocksCount++; };
+    void revealBlock(int x, int y) 
+    { 
+        if (x >= 0 && x < boardSizeX && y >= 0 && y < boardSizeY) 
+            blocks[x][y]->reveal(), revealedBlocksCount++; 
+    }
 
     // Get revealed block counts
     int getRevealedBlocksCount() const { return revealedBlocksCount; }
     
     // get block type
-    short getBlockType(int x, int y) { if (x >= 0 && x < boardSizeX && y >= 0 && y < boardSizeY) return blocks[x][y]->getType(); else return UNKNOWN; }
+    short getBlockType(int x, int y) 
+    { 
+        if (x >= 0 && x < boardSizeX && y >= 0 && y < boardSizeY) 
+            return blocks[x][y]->getType(); 
+        else 
+            return UNKNOWN; 
+    }
 
     // find mine count around
     int findMineCountAround(int x, int y);
@@ -127,13 +153,19 @@ public:
     void setMineCountAroundForBlock(int x, int y);
 
     // reveal all mines
-    void revealAllMines() { for (int i = 0; i < boardSizeX; i++) for (int j = 0; j < boardSizeY; j++) if (blocks[i][j]->getType() == MINE) blocks[i][j]->reveal(); }
+    void revealAllMines() 
+    { 
+        for (int i = 0; i < boardSizeX; i++) 
+            for (int j = 0; j < boardSizeY; j++) 
+                if (blocks[i][j]->getType() == MINE) blocks[i][j]->reveal(); 
+    }
 
     // Reveal nearby safe blocks if revealed a empty block
     void revealNearbySafeBlock(int x, int y);
 
     // Check if game finished
-    bool isGameFinished() { return _isGameFinished; }
+    bool isGameFinished() { return isGamewon || isGameLost != NONE; }
+    bool isMineRevealed() { return isGameLost == MINE_REVEALED; }
 
     // Texture cache
     void preloadGameBoardTexture();
@@ -141,7 +173,18 @@ public:
     bool checkIfTextureLoaded() { return isTextureLoaded; };
 
     // Reset the game board.
-    void reset() { _isGameFinished = false; revealedBlocksCount = 0; mineCount = 0; }
+    void reset() 
+    { 
+        isGamewon = false; 
+        isGameLost = false;
+        gameStatus = NONE;
+        revealedBlocksCount = 0;
+        mineCount = 0;
+        blocks.clear();
+    }
+
+    // Get clicked block position.
+    sf::Vector2i getClickedBlockPosition(sf::RenderWindow &window, const sf::Event &event, const sf::FloatRect &boardBounds, const float blockSize);
 
 private:
     // Game board size. (Default 10x10)
@@ -157,10 +200,19 @@ private:
     // Count revealed blocks
     int revealedBlocksCount;
     int mineCount;
-    int _isGameFinished = false;
+    bool isGamewon = false;
+    bool isGameLost = false;
+    enum _gameStatus
+    {
+        NONE = 0, // Nothing special happenned.
+        MINE_REVEALED = 1,
+        WON = 2,
+        LOST = 3,
+        // Any other kind of condition awaiting for develop.
+    } gameStatus;
 
     // Texture cache
-    std::map<std::string, sf::Texture> gameBoardTexture;
+    TextureCache gameBoardTexture;
     bool isTextureLoaded = false;
 };
 

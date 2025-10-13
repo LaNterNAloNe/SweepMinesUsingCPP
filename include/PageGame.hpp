@@ -12,12 +12,12 @@
 #define returnButtonX 50
 #define returnButtonY 50
 #define returnButtonSize 50
-#define returnButtonArea MAKE_AREA_SQUARE(returnButtonX, returnButtonY, returnButtonSize)
+#define returnButtonArea makeSquareArea(returnButtonX, returnButtonY, returnButtonSize)
 
 #define restartButtonX VIRTUAL_WINDOW_SIZE_X  - 50
 #define restartButtonY 50
 #define restartButtonSize 50
-#define restartButtonArea MAKE_AREA_SQUARE(restartButtonX, restartButtonY, restartButtonSize)
+#define restartButtonArea makeSquareArea(restartButtonX, restartButtonY, restartButtonSize)
 
 
 
@@ -33,6 +33,9 @@ public:
     // Game start state.
     void setGameStart(bool gameStart) { isGameStart = gameStart; }
     // Check if game finished
+
+    // Check if game finished.
+    bool checkIsTextureLoaded() { return isTextureLoaded; };
     ~CPageGame() override {}
 private:
     // Back to beginning page.
@@ -54,8 +57,6 @@ private:
     bool isGameOver = false;
 
     // Texture cache.
-    std::map<std::string, sf::Texture> functionButtonTexture;
+    TextureCache functionButtonTexture;
+    bool isTextureLoaded = false;
 };
-
-// Get clicked block position.
-sf::Vector2i getClickedBlockPosition(sf::RenderWindow &window, const sf::Event &event, const sf::FloatRect &boardBounds, int blockSize, int rows, int cols);

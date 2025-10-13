@@ -4,6 +4,7 @@
 #include "SFML/Graphics.hpp"
 #include <iostream>
 #include <cmath>
+#include <map> // include map header for cross-platform compatibility
 using sf::Event;
 using sf::RenderWindow;
 using sf::Sprite;
@@ -16,19 +17,20 @@ using std::endl;
 #define VIRTUAL_WINDOW_SIZE_X 1920
 #define VIRTUAL_WINDOW_SIZE_Y 1080
 
+// LEGACY, do not use unless neccessary
 // Get the area of a button using Marco Function
-// ##Square
-#define MAKE_AREA_SQUARE(x, y, size) sf::FloatRect( \
-    (x) - (size) / 2.f,                      \
-    (y) - (size) / 2.f,                      \
-    (size),                                  \
-    (size))
-// ##Rectangle
-#define MAKE_AREA_RECT(x, y, width, height) sf::FloatRect( \
-    (x) - (width) / 2.f,                     \
-    (y) - (height) / 2.f,                    \
-    (width),                                 \
-    (height))
+// // ##Square
+// #define MAKE_AREA_SQUARE(x, y, size) sf::FloatRect( \
+//     (x) - (size) / 2.f,                      \
+//     (y) - (size) / 2.f,                      \
+//     (size) * 1.f,                                  \
+//     (size) * 1.f)
+// // ##Rectangle
+// #define MAKE_AREA_RECT(x, y, width, height) sf::FloatRect( \
+//     (x) - (width) / 2.f,                     \
+//     (y) - (height) / 2.f,                    \
+//     (width) * 1.f,                              \
+//     (height) * 1.f)
 
 
 /* Visualize initialization */
@@ -62,6 +64,8 @@ enum Align {
 };
 
 // #Rectangle
+sf::FloatRect makeSquareArea(float x, float y, float size);
+sf::FloatRect makeRectangleArea(float x, float y, float width, float height);
 void drawRectangle(RenderWindow &window, float x1, float y1, float x2, float y2, sf::Color color);
 
 // #Text
@@ -71,8 +75,8 @@ sf::Text createTextObject(const std::string &content, unsigned int fontSize, sf:
 void drawText(sf::RenderWindow &window, const sf::Text &text);
 
 // #Texture
+typedef std::map<std::string, sf::Texture> TextureCache;
 bool drawTextureWithPath(RenderWindow &window, float x, float y, float size, const std::string &path);
-void preloadTexture(const std::string &path, std::map<std::string, sf::Texture> &textureCache);
-bool drawCachedTexture(RenderWindow &window, float x, float y, float size, const std::string &pat,
-                       std::map<std::string, sf::Texture> &textureCache);
-void freePreloadTextureCache(std::map<std::string, sf::Texture> &TextureCache);
+void preloadTexture(const std::string &path, TextureCache &textureCache);
+bool drawCachedTexture(RenderWindow &window, float x, float y, float size, const std::string &path, TextureCache &textureCache);
+void freePreloadTextureCache(TextureCache &textureCache);

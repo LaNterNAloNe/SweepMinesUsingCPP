@@ -12,7 +12,7 @@
 #define exitButtonX 50
 #define exitButtonY 50
 #define exitButtonSize 50
-#define exitButtonArea MAKE_AREA_SQUARE(exitButtonX, exitButtonY, exitButtonSize)
+#define exitButtonArea makeSquareArea(exitButtonX, exitButtonY, exitButtonSize)
 
 
 

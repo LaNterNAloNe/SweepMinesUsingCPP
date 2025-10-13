@@ -24,19 +24,77 @@ void CSafeBlock::setMineCountAround(int count, int x, int y, int boardSizeX, int
 
 /* CGameBoard class implementation */
 
-// Handle game event
+// Handle game event.
 void CGameBoard::handleEvent(sf::RenderWindow &window, sf::Event &event)
 {
     // Wait for transplant
+    sf::Vector2i clickedBlock = getClickedBlockPosition(window, event, getBoardArea(), getBlockSize());
+
+    cout << "Clicked block: (" << clickedBlock.x << ", " << clickedBlock.y << ")" << endl;
+
+    // If the clicked block is valid, handle the event.
+    if (event.mouseButton.button == sf::Mouse::Left)
+    {
+        // Left click.
+        if (clickedBlock.x != -1 && clickedBlock.y != -1 &&
+            isBlockRevealed(clickedBlock.x, clickedBlock.y) == false &&
+            isBlockFlagged(clickedBlock.x, clickedBlock.y) == false)
+        {
+            // If the clicked block is a mine, game over.
+            if (getBlockType(clickedBlock.x, clickedBlock.y) == MINE)
+            {
+                gameStatus = MINE_REVEALED;
+                revealAllMines();
+            }
+            // If the clicked block is empty, reveal nearby safe blocks.
+            else if (getBlockType(clickedBlock.x, clickedBlock.y) == EMPTY)
+            {
+                revealNearbySafeBlock(clickedBlock.x, clickedBlock.y);
+            }
+            // If the clicked block is a number, just reveal it.
+            else
+            {
+                // If the clicked block is not empty, set the mine count around.
+                setMineCountAroundForBlock(clickedBlock.x, clickedBlock.y);
+                // Reveal the block.
+                revealBlock(clickedBlock.x, clickedBlock.y);
+            }
+        }
+    }
+    else if (event.mouseButton.button == sf::Mouse::Right)
+    {
+        // Right click.
+        if (clickedBlock.x != -1 && clickedBlock.y != -1 &&
+            isBlockRevealed(clickedBlock.x, clickedBlock.y) == false)
+        {
+            // If the clicked block is not flagged, flag it.
+            if (isBlockFlagged(clickedBlock.x, clickedBlock.y) == false)
+            {
+                setBlockFlagged(clickedBlock.x, clickedBlock.y, true);
+            }
+            // If the clicked block is flagged, unflag it.
+            else
+            {
+                setBlockFlagged(clickedBlock.x, clickedBlock.y, false);
+            }
+        }
+    }
 }
 
 void CGameBoard::update()
 {
-    if (revealedBlocksCount == (boardSizeX * boardSizeY - mineCount))
+    if (revealedBlocksCount == (boardSizeX * boardSizeY - mineCount) && gameStatus != MINE_REVEALED)
     {
-        _isGameFinished = true;
-        cout << "\33[34m[INFO]\33[0m Game finished." << endl;
-    }
+        gameStatus = WON;
+        isGamewon = true;
+        cout << "\33[34m[INFO]\33[0m Game \033[32mWon.\033[0m" << endl;
+    } 
+    else if (gameStatus == MINE_REVEALED)
+    {
+        gameStatus = LOST;
+        isGameLost = true;
+        cout << "\33[34m[Info]\33[0m Game \033[31mlost.\033[0m" << endl;
+    } 
 }
 
 void CGameBoard::render(sf::RenderWindow &window, sf::Event &event)
@@ -138,8 +196,11 @@ void CGameBoard::revealNearbySafeBlock(int startX, int startY)
         // Skip if already revealed or not safe
         if (block->isRevealed() || block->getType() != EMPTY && block->getType() != NUMBER) 
             continue;
-            
 
+        // Skip if flagged
+        if (block->isFlagged())
+            continue;
+            
         // Get mine count around this block
         int mineCount = findMineCountAround(x, y);
 
@@ -196,7 +257,9 @@ void CGameBoard::initialize(int boardSizeX, int boardSizeY, int mineCount)
     this->boardSizeY = boardSizeY;
 
     // Generate the game board area according to the board size, align to the center of the virtual window.
-    float blockSize = (VIRTUAL_WINDOW_SIZE_Y - 80) / boardSizeY;
+    float blockSizeX = (VIRTUAL_WINDOW_SIZE_X - 80) / boardSizeX;
+    float blockSizeY = (VIRTUAL_WINDOW_SIZE_Y - 80) / boardSizeY;
+    float blockSize = std::min(blockSizeX, blockSizeY);
     float boardX = blockSize * boardSizeX;
     float boardY = blockSize * boardSizeY;
     float boardStartX = (VIRTUAL_WINDOW_SIZE_X - boardX) / 2;
@@ -204,6 +267,8 @@ void CGameBoard::initialize(int boardSizeX, int boardSizeY, int mineCount)
 
     // Set the game board area.
     boardArea = sf::FloatRect(boardStartX, boardStartY, boardX, boardY);
+
+    cout << "\33[32m[DEBUG]\33[0m Board area: " << boardArea.left << ", " << boardArea.top << ", " << boardArea.width << ", " << boardArea.height << endl;
 
     // Set the row size of the game board.
     // Attention: Avoid resizing blocks behind the first block of the column,
@@ -274,6 +339,39 @@ void CGameBoard::initialize(int boardSizeX, int boardSizeY, int mineCount)
         }
     }
 }
+
+// Returns the grid position (column, row) of the block that was clicked by the mouse.
+// Only responds to left mouse button clicks within the board boundaries.
+sf::Vector2i CGameBoard::getClickedBlockPosition(sf::RenderWindow &window, const sf::Event &event, const sf::FloatRect &boardBounds, const float blockSize)
+{
+    // Check if the event is a left mouse button press
+    if (event.type != sf::Event::MouseButtonPressed)
+        return sf::Vector2i(-1, -1); // Invalid click, return sentinel value
+
+    // Get the mouse position relative to the window
+    sf::Vector2i pixelPos = sf::Mouse::getPosition(window);
+
+    // Convert pixel coordinates to world coordinates (accounts for view transformations)
+    sf::Vector2f worldPos = window.mapPixelToCoords(pixelPos);
+
+    // Calculate the block indices based on block size
+    int col = static_cast<int>(worldPos.x - boardBounds.left) / blockSize;
+    int row = static_cast<int>(worldPos.y - boardBounds.top) / blockSize;
+
+    // Check if the calculated position is within the board boundaries
+    if (col < 0 || col >= boardSizeX || row < 0 || row >= boardSizeY)
+        return sf::Vector2i(-1, -1); // Click outside the board
+
+    // Debug Output
+    // if (event.mouseButton.button == sf::Mouse::Left)
+    //     cout << "\033[34m[INFO]\033[0m Left clicked block position: (" << col << ", " << row << ")" << endl;
+    // else if (event.mouseButton.button == sf::Mouse::Right)
+    //     cout << "\033[34m[INFO]\033[0m Right clicked block position: (" << col << ", " << row << ")" << endl;
+
+    // Return the valid block position
+    return sf::Vector2i(col, row);
+}
+
 
 // Transform the mine count to the texture name.
 const std::string transformMineCountToTextureName(int mineCount)

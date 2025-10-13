@@ -24,3 +24,4 @@ file(GLOB SOURCES "source/*.cpp")
 
 add_executable(SweepMine ${SOURCES})
 target_link_libraries(SweepMine PRIVATE sfml-graphics sfml-system sfml-window)
+target_include_directories(SweepMine PRIVATE ${SFML_INCLUDE_DIR})

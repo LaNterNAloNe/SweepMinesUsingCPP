@@ -344,13 +344,13 @@ void CGameBoard::initialize(int boardSizeX, int boardSizeY, int mineCount)
     this->boardSizeY = boardSizeY;
 
     // Generate the game board area according to the board size, align to the center of the virtual window.
-    float blockSizeX = (VIRTUAL_WINDOW_SIZE_X - 80) / boardSizeX;
-    float blockSizeY = (VIRTUAL_WINDOW_SIZE_Y - 80) / boardSizeY;
+    float blockSizeX = (virtualWindowSizeX - 80) / boardSizeX;
+    float blockSizeY = (virtualWindowSizeY - 80) / boardSizeY;
     float blockSize = std::min(blockSizeX, blockSizeY);
     float boardX = blockSize * boardSizeX;
     float boardY = blockSize * boardSizeY;
-    float boardStartX = (VIRTUAL_WINDOW_SIZE_X - boardX) / 2;
-    float boardStartY = (VIRTUAL_WINDOW_SIZE_Y - boardY) / 2;
+    float boardStartX = (virtualWindowSizeX - boardX) / 2;
+    float boardStartY = (virtualWindowSizeY - boardY) / 2;
 
     // Set the game board area.
     boardArea = sf::FloatRect(boardStartX, boardStartY, boardX, boardY);

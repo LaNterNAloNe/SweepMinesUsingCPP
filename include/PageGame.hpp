@@ -14,7 +14,7 @@
 #define returnButtonSize 50
 #define returnButtonArea makeSquareArea(returnButtonX, returnButtonY, returnButtonSize)
 
-#define restartButtonX VIRTUAL_WINDOW_SIZE_X  - 50
+#define restartButtonX virtualWindowSizeX  - 50
 #define restartButtonY 50
 #define restartButtonSize 50
 #define restartButtonArea makeSquareArea(restartButtonX, restartButtonY, restartButtonSize)

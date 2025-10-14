@@ -35,7 +35,7 @@ public:
     short theme; // Visual theme.
     bool fullScreen; // Whether to use full screen.
     bool showFPS; // Whether to show FPS.
-    bool showMouseTrail; // Whether to show mouse tail.
+    bool showMouseTrail; // Whether to show mouse trail.
 
     // Game settings
     bool useWin7MineSweeperFeature; // Use Win7 MineSweeper feature: Fast reveal.

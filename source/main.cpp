@@ -3,6 +3,11 @@
 // define global game settings parameter.
 CGlobalGameSetting globalSettings;
 
+// define global virtual window size parameter.
+unsigned int virtualWindowSizeX = 0;
+unsigned int virtualWindowSizeY = 0;
+
+
 int main()
 {
     // Show license that give a brife introduction
@@ -45,6 +50,9 @@ int main()
 
             // Debug output for multiple types of events.
             debugOutput(mainWindow, event);
+            
+            // Check if window size is resized by user and take actions.
+            checkWindowResize(mainWindow, event);
             
             // Handle events for the current page if the page exists.
             if (isPageExist(currentPage, pages)) {

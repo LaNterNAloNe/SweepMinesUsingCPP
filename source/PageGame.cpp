@@ -71,7 +71,7 @@ void CPageGame::update(sf::RenderWindow &window, sf::Event event)
 void CPageGame::render(sf::RenderWindow &window, sf::Event event)
 {
     // Draw white background.
-    drawRectangle(window, 0, 0, VIRTUAL_WINDOW_SIZE_X, VIRTUAL_WINDOW_SIZE_Y, sf::Color::White);
+    drawRectangle(window, 0, 0, virtualWindowSizeX, virtualWindowSizeY, sf::Color::White);
 
     // Render the game.
     if (isInGame == true || isGameOver == true)

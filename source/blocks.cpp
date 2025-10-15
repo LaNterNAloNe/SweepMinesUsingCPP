@@ -30,8 +30,6 @@ void CGameBoard::handleEvent(sf::RenderWindow &window, sf::Event &event)
     // Wait for transplant
     sf::Vector2i clickedBlock = getClickedBlockPosition(window, event, getBoardArea(), getBlockSize());
 
-    cout << "Clicked block: (" << clickedBlock.x << ", " << clickedBlock.y << ")" << endl;
-
     // Return if get invalid clicked block coordinate.
     if (clickedBlock.x == -1 || clickedBlock.y == -1)
     {
@@ -110,7 +108,7 @@ void CGameBoard::update()
 void CGameBoard::render(sf::RenderWindow &window, sf::Event &event)
 {
     // According to global setting to decide which theme to use.
-    std::string theme = (globalSettings.theme == DARK) ? "dark_theme" : "light_theme";
+    std::string theme = transformThemeToTextureThemePath(globalSettings.theme);
 
     // Render the game board, using cached texture. (Must)
     for (int i = 0; i < boardSizeX; ++i)
@@ -118,20 +116,35 @@ void CGameBoard::render(sf::RenderWindow &window, sf::Event &event)
         for (int j = 0; j < boardSizeY; ++j)
         {
             sf::FloatRect blockPosition = blocks[i][j]->getPosition();
+
             // Draw the block if it is not revealed.
             if (blocks[i][j]->isRevealed() == false)
             {
+                // If the block is not revealed and not flagged, draw the common texture.
                 if (isMouseStayInArea(window, event, blockPosition) && !blocks[i][j]->isFlagged())
                 {
-                    drawCachedTexture(window, blockPosition.left + blockPosition.width / 2, blockPosition.top + blockPosition.height / 2, blockPosition.width, "page_game/" + theme + "/block_hover.png", gameBoardTexture);
+                    // If the block is not flagged and not hovered, draw the common texture.
+                    blocks[i][j]->blockTexture.path = "page_game/" + theme + "block_hover.png";
+                    drawCachedTexture(window, blocks[i][j]->blockTexture, gameBoardTexture);
                 }
                 else if (!isMouseStayInArea(window, event, blockPosition) && !blocks[i][j]->isFlagged())
                 {
-                    drawCachedTexture(window, blockPosition.left + blockPosition.width / 2, blockPosition.top + blockPosition.height / 2, blockPosition.width, "page_game/" + theme + "/block.png", gameBoardTexture);
+                    // If the block is not flagged and hovered, draw the hover texture.
+                    blocks[i][j]->blockTexture.path = "page_game/" + theme + "block.png";
+                    drawCachedTexture(window, blocks[i][j]->blockTexture, gameBoardTexture);
                 }
+                // If the block is flagged, draw the flagged texture.
                 else if (blocks[i][j]->isFlagged())
                 {
-                    drawCachedTexture(window, blockPosition.left + blockPosition.width / 2, blockPosition.top + blockPosition.height / 2, blockPosition.width, "page_game/" + theme + "/flag.png", gameBoardTexture);
+                    // If the block is flagged, draw the flagged texture.
+                    blocks[i][j]->blockTexture.path = "page_game/" + theme + "flag.png";
+                    drawCachedTexture(window, blocks[i][j]->blockTexture, gameBoardTexture);
+                }
+                else 
+                {
+                    // If the block is not flagged and not hovered, draw the common texture.
+                    blocks[i][j]->blockTexture.path = "page_game/" + theme + "block.png";
+                    drawCachedTexture(window, blocks[i][j]->blockTexture, gameBoardTexture);
                 }
             }
 
@@ -140,11 +153,20 @@ void CGameBoard::render(sf::RenderWindow &window, sf::Event &event)
             {
                 if (blocks[i][j]->getType() == MINE)
                 {
-                    drawCachedTexture(window, blockPosition.left + blockPosition.width / 2, blockPosition.top + blockPosition.height / 2, blockPosition.width, "page_game/" + theme + (blocks[i][j]->isExplode() ? "/mine.png" : "/mine_unrevealed.png"), gameBoardTexture);
+                    if (blocks[i][j]->isExplode())
+                    {
+                        blocks[i][j]->blockTexture.path = "page_game/" + theme + "mine.png";
+                    }
+                    else
+                    {
+                        blocks[i][j]->blockTexture.path = "page_game/" + theme + "mine_unrevealed.png";
+                    }
+                    drawCachedTexture(window, blocks[i][j]->blockTexture, gameBoardTexture);
                 }
                 else if (blocks[i][j]->getType() == NUMBER || blocks[i][j]->getType() == EMPTY)
                 {
-                    drawCachedTexture(window, blockPosition.left + blockPosition.width / 2, blockPosition.top + blockPosition.height / 2, blockPosition.width, transformMineCountToTextureName(blocks[i][j]->getMineCountAround()), gameBoardTexture);
+                    blocks[i][j]->blockTexture.path = transformMineCountToTextureName(blocks[i][j]->getMineCountAround());
+                    drawCachedTexture(window, blocks[i][j]->blockTexture, gameBoardTexture);
                 }
             }
         }
@@ -330,7 +352,7 @@ void CGameBoard::revealBlocksNearbyIfNearbyFlagsEqualNum(int x, int y)
 }
 
 
-
+// Initialize the game board. Here, set each block's texture infomation for further use.
 void CGameBoard::initialize(int boardSizeX, int boardSizeY, int mineCount)
 {
     // Initialize the game board.
@@ -398,7 +420,7 @@ void CGameBoard::initialize(int boardSizeX, int boardSizeY, int mineCount)
         blocks[i][j] = std::make_unique<CSafeBlock>();
     }
 
-    // Step 5: Set the position of each block.
+    // Step 5: Set the parameter of each block.
     for (int i = 0; i < boardSizeX; ++i)
     {
         for (int j = 0; j < boardSizeY; ++j)
@@ -406,6 +428,7 @@ void CGameBoard::initialize(int boardSizeX, int boardSizeY, int mineCount)
             // Get the position of the block. (Area)
             sf::FloatRect blockPosition = sf::FloatRect(boardStartX + i * blockSize, boardStartY + j * blockSize, blockSize, blockSize);
             // Set the position of the block.
+            blocks[i][j]->blockTexture.size = {blockSize, blockSize};
             blocks[i][j]->setPosition(blockPosition);
         }
     }
@@ -423,6 +446,35 @@ void CGameBoard::initialize(int boardSizeX, int boardSizeY, int mineCount)
             int count = findMineCountAround(i, j);
             blocks[i][j]->setMineCountAround(count, i, j, boardSizeX, boardSizeY);
             blocks[i][j]->setType(count > 0 ? NUMBER : EMPTY);
+            blocks[i][j]->blockTexture.path = transformMineCountToTextureName(count);
+        }
+    }
+}
+
+// Update gameboard's area and blocks' visual parameter when window resized.
+void CGameBoard::updateBoardAndBlockVisualization()
+{
+    // Update gameboard's area.
+    float blockSizeX = (virtualWindowSizeX - 80) / boardSizeX;
+    float blockSizeY = (virtualWindowSizeY - 80) / boardSizeY;
+    float blockSize = std::min(blockSizeX, blockSizeY);
+    float boardX = blockSize * boardSizeX;
+    float boardY = blockSize * boardSizeY;
+    float boardStartX = (virtualWindowSizeX - boardX) / 2;
+    float boardStartY = (virtualWindowSizeY - boardY) / 2;
+    boardArea = sf::FloatRect(boardStartX, boardStartY, boardX, boardY);
+
+    // Update blocks' position.
+    for (int i = 0; i < boardSizeX; ++i)
+    {
+        for (int j = 0; j < boardSizeY; ++j)
+        {
+            // Get the position of the block. (Area)
+            sf::FloatRect blockPosition = sf::FloatRect(boardStartX + i * blockSize, boardStartY + j * blockSize, blockSize, blockSize);
+            // Set the position of the block.
+            blocks[i][j]->setPosition(blockPosition);
+            // Set the size of the block.
+            blocks[i][j]->blockTexture.size = {blockSize, blockSize};
         }
     }
 }
@@ -441,13 +493,13 @@ sf::Vector2i CGameBoard::getClickedBlockPosition(sf::RenderWindow &window, const
     // Convert pixel coordinates to world coordinates (accounts for view transformations)
     sf::Vector2f worldPos = window.mapPixelToCoords(pixelPos);
 
+    // Check if the calculated position is within the board boundaries
+    if (!boardBounds.contains(worldPos))
+        return sf::Vector2i(-1, -1); // Click outside the board
+
     // Calculate the block indices based on block size
     int col = static_cast<int>(worldPos.x - boardBounds.left) / blockSize;
     int row = static_cast<int>(worldPos.y - boardBounds.top) / blockSize;
-
-    // Check if the calculated position is within the board boundaries
-    if (col < 0 || col >= boardSizeX || row < 0 || row >= boardSizeY)
-        return sf::Vector2i(-1, -1); // Click outside the board
 
     // Debug Output
     // if (event.mouseButton.button == sf::Mouse::Left)
@@ -464,32 +516,49 @@ sf::Vector2i CGameBoard::getClickedBlockPosition(sf::RenderWindow &window, const
 const std::string transformMineCountToTextureName(int mineCount)
 {
     // According to global setting to decide which theme to use.
-    std::string theme = (globalSettings.theme == DARK) ? "dark_theme" : "light_theme";
+    std::string theme = transformThemeToTextureThemePath(globalSettings.theme);
 
     switch (mineCount)
     {
     case -1:
-        return "page_game/" + theme + "/mine.png";
+        return "page_game/" + theme + "mine.png";
     case 0:
-        return "page_game/" + theme + "/empty.png";
+        return "page_game/" + theme + "empty.png";
     case 1:
-        return "page_game/" + theme + "/num1.png";
+        return "page_game/" + theme + "num1.png";
     case 2:
-        return "page_game/" + theme + "/num2.png";
+        return "page_game/" + theme + "num2.png";
     case 3:
-        return "page_game/" + theme + "/num3.png";
+        return "page_game/" + theme + "num3.png";
     case 4:
-        return "page_game/" + theme + "/num4.png";      
+        return "page_game/" + theme + "num4.png";
     case 5:
-        return "page_game/" + theme + "/num5.png";
+        return "page_game/" + theme + "num5.png";
     case 6:
-        return "page_game/" + theme + "/num6.png";
+        return "page_game/" + theme + "num6.png";
     case 7:
-        return "page_game/" + theme + "/num7.png";
+        return "page_game/" + theme + "num7.png";
     case 8:
-        return "page_game/" + theme + "/num8.png";
+        return "page_game/" + theme + "num8.png";
     default:
-        return "page_game/" + theme + "/empty.png";
+        return "page_game/" + theme + "empty.png";
+    }
+}
+
+// Transform the theme to the texture theme path.
+
+const std::string transformThemeToTextureThemePath(int theme)
+{
+    switch (theme)
+    {
+    case DARK:
+        return "dark_theme/";
+    case LIGHT:
+        return "light_theme/";
+    case CLASSICAL:
+        return "classical/";
+    default:
+        return "light_theme/";
     }
 }
 

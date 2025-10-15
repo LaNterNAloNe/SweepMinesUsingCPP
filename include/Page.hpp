@@ -33,9 +33,13 @@ public:
     virtual void update(sf::RenderWindow &window, sf::Event event) = 0;
     virtual void render(sf::RenderWindow &window, sf::Event event) = 0;
     virtual ~CPage() {}
+
+protected:
+    // Store the last window size. Each derived class will inherit it and store in specific memory.
+    sf::Vector2f lastWindowSize = {0, 0}; 
 };
 
 
-const char *getPageName(const int page);
+const std::string getPageName(const int page);
 bool isPageExist(const int currentPage, const std::map<int, std::unique_ptr<CPage>> &pages);
 void changePage(sf::RenderWindow &window, int &currentPage, int newPage, const std::map<int, std::unique_ptr<CPage>> &pages);

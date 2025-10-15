@@ -8,12 +8,17 @@ void initVisualize(RenderWindow &window, const std::string &title) {
     // Initialize the visualization window.
     VideoMode desktopMode = VideoMode::getDesktopMode();
 
+    // Set the virtual window size to the desktop resolution first, used to calculate initial window size.
     virtualWindowSizeX = desktopMode.width;
     virtualWindowSizeY = desktopMode.height;
     
     // Set the window size to 50% of the desktop resolution and set the window unresizable.
     window.create(VideoMode(desktopMode.width / 1.5, desktopMode.height / 1.5), title, 
     sf::Style::Titlebar | sf::Style::Close | sf::Style::Resize);
+
+    // Then inherit the window size.
+    virtualWindowSizeX = window.getSize().x;
+    virtualWindowSizeY = window.getSize().y;
 
     // Set virtual coordinate system to 1920x1080 for consistency across different screen resolutions.
     sf::View view(sf::FloatRect(0.f, 0.f, virtualWindowSizeX, virtualWindowSizeY));
@@ -160,6 +165,7 @@ int isMouseClickInArea(sf::RenderWindow &window, const sf::Event &event, sf::Flo
 {
     // Get mouse position in real coordinates.
     sf::Vector2i pixelPos(event.mouseButton.x, event.mouseButton.y);
+    // Transform pixel position to virtual coordinates.
     sf::Vector2f worldPos = window.mapPixelToCoords(pixelPos);
 
     // Check if the mouse click is inside the area.
@@ -269,10 +275,10 @@ sf::Text createTextObject(
     return text;
 }
 
-void drawText(sf::RenderWindow &window, const sf::Text &text)
+void drawText(sf::RenderWindow &window, const CVisualText &text)
 {
     // Draw the text.
-    window.draw(text);
+    window.draw(text.textObject);
 }
 
 // #Texture
@@ -315,7 +321,7 @@ bool drawTextureWithPath(sf::RenderWindow &window, CVisualTexture &tex)
 
     // Create sprite and apply scaling
     sf::Sprite sprite(texture);
-    sprite.setScale(scaleFactorX, scaleFactorY);
+    sprite.setScale(scaleFactorX * tex.scale, scaleFactorY * tex.scale);
 
     // Set origin to center for proper positioning, relative to texture size, not window position.
     sprite.setOrigin(originalSize.x / 2.f, originalSize.y / 2.f);
@@ -346,27 +352,26 @@ void preloadTexture(const std::string &path, TextureCache &textureCache)
 
 // Draw texture from cache.
 // It will draw texture from cache if it exists, otherwise it will return false.
-bool drawCachedTexture(sf::RenderWindow &window, float x, float y, float size, const std::string &path, 
-    TextureCache &textureCache)
+bool drawCachedTexture(sf::RenderWindow &window, CVisualTexture &tex, TextureCache &textureCache)
 {
     // find texture in cache
-    auto it = textureCache.find(path);
+    auto it = textureCache.find(tex.path);
     if (it == textureCache.end())
     {
-        std::cout << "\33[31m[ERROR]\33[0m Texture not preloaded: " << path << std::endl;
+        std::cout << "\33[31m[ERROR]\33[0m Texture not preloaded: " << tex.path << std::endl;
         return false;
-    }
+    } else; // Do nothing if judgement passed.
 
     // get texture from cache
     const sf::Texture &texture = it->second;
     sf::Vector2u originalSize = texture.getSize();
-    float scaleFactor = size / static_cast<float>(originalSize.x);
+    float scaleFactor = tex.size.x / static_cast<float>(originalSize.x);
 
     // create sprite and apply scaling
     sf::Sprite sprite(texture);
-    sprite.setScale(scaleFactor, scaleFactor);
+    sprite.setScale(scaleFactor * tex.scale, scaleFactor * tex.scale);
     sprite.setOrigin(originalSize.x / 2.f, originalSize.y / 2.f);
-    sprite.setPosition(x, y);
+    sprite.setPosition(tex.position.x, tex.position.y);
 
     // draw sprite
     window.draw(sprite);

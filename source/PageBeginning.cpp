@@ -53,8 +53,11 @@ void CPageBeginning::update(sf::RenderWindow &window, sf::Event event)
     }
 
     // React to window resizing.
-    if (event.type == sf::Event::Resized)
+    if (event.type == sf::Event::Resized || lastWindowSize != static_cast<sf::Vector2f>(window.getSize()))
     {
+        // Update the lastWindowSize parameter in this page class.
+        lastWindowSize = static_cast<sf::Vector2f>(window.getSize());
+
         // Update the position of the text objects.
         mineTexture.updateWhenWindowResize(updateMineTexturePosition(), updateMineTextureSize());
         startGameButtonText.updateWhenWindowResize(updateStartGameButtonTextPosition());
@@ -79,21 +82,14 @@ void CPageBeginning::render(sf::RenderWindow &window, sf::Event event)
     drawRectangle(window, 0, 0, virtualWindowSizeX, virtualWindowSizeY, tmpColor);
 
     // Draw a mine at the center of the screen.
-    drawTextureWithPath(window, mineTexture);
+    drawCachedTexture(window, mineTexture, beginningPageTexture);
 
     // Draw a "Start Game" button at the center of the screen.
-    drawText(window, startGameButtonText.textObject);
+    drawText(window, startGameButtonText);
 
     // Draw a "Exit" button at the center of the screen.
-    drawTextureWithPath(window, currentHoverState == EXIT ? exitButtonTextureHover : exitButtonTexture);
-    drawText(window, exitButtonText.textObject);
-
-    // DEBUG
-    showRect(window, exitButtonTexture.area);
-    showRect(window, exitButtonText.area);
-    showRect(window, startGameButtonText.area);
-    // showLine(window, {0, 0}, updateExitTexturePosition());
-    // showLine(window, {0, virtualWindowSizeY}, updateExitTextPosition());
+    drawCachedTexture(window, currentHoverState == EXIT ? exitButtonTextureHover : exitButtonTexture, beginningPageTexture);
+    drawText(window, exitButtonText);
 }
 
 

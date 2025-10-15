@@ -1,7 +1,7 @@
 #include "../include/Page.hpp"
 
 // Get the name of the page, coloring the name string.
-const char *getPageName(const int page)
+const std::string getPageName(const int page)
 {
     switch (page)
     {

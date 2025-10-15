@@ -19,15 +19,14 @@ void CPageGame::handleEvent(sf::RenderWindow &window, sf::Event &event, int &cur
             gameBoard.handleEvent(window, event);
         }
         
-
         cout << "Revealed block counts: " << gameBoard.getRevealedBlocksCount() << endl;
 
-        if (isMouseClickInArea(window, event, returnButtonArea))
+        if (isMouseClickInArea(window, event, returnButton.area))
         {
             backToBeginning(window, currentPage, pages);
             cout << "\33[34m[INFO]\33[0m " << getPageName(BEGINNING_PAGE) << " 'Return' button clicked." << endl;
         }
-        else if (isMouseClickInArea(window, event, restartButtonArea))
+        else if (isMouseClickInArea(window, event, restartButton.area))
         {
             restartGame();
             cout << "\33[34m[INFO]\33[0m " << getPageName(GAME_PAGE) << " 'Restart' button clicked." << endl;
@@ -65,6 +64,19 @@ void CPageGame::update(sf::RenderWindow &window, sf::Event event)
         gameBoard.preloadGameBoardTexture();
     if (!checkIsTextureLoaded())
         preloadFunctionButtonTexture();
+
+    if (event.type == sf::Event::Resized || lastWindowSize != static_cast<sf::Vector2f>(window.getSize()))
+    {
+        // Update the lastWindowSize parameter in this page class.
+        lastWindowSize = static_cast<sf::Vector2f>(window.getSize());
+
+        // Update the position of the function buttons.
+        returnButton.updateWhenWindowResize(updateReturnButtonPosition(), updateReturnButtonSize());
+        restartButton.updateWhenWindowResize(updateRestartButtonPosition(), updateRestartButtonSize());
+
+        // Update gameboard's area and blocks' visual parameter.
+        gameBoard.updateBoardAndBlockVisualization();
+    }
 }
 
 // Draw the game page.
@@ -81,11 +93,17 @@ void CPageGame::render(sf::RenderWindow &window, sf::Event event)
     }
 
     // Render the return button.
-    drawCachedTexture(window, returnButtonX, returnButtonY, 
-        isMouseStayInArea(window, event, returnButtonArea) ? returnButtonSize * 1.1 : returnButtonSize, "page_game/return.png", functionButtonTexture);
+    if (isMouseStayInArea(window, event, returnButton.area))
+        returnButton.scale = 1.1f;
+    else
+        returnButton.scale = 1.f;
+    drawCachedTexture(window, returnButton, functionButtonTexture);
     // Render the restart button.
-    drawCachedTexture(window, restartButtonX, restartButtonY, 
-        isMouseStayInArea(window, event, restartButtonArea) ? restartButtonSize * 1.1 : restartButtonSize, "page_game/restart.png", functionButtonTexture);
+    if (isMouseStayInArea(window, event, restartButton.area))
+        restartButton.scale = 1.1f;
+    else
+        restartButton.scale = 1.f;
+    drawCachedTexture(window, restartButton, functionButtonTexture);
 }
 
 // Back to beginning page.

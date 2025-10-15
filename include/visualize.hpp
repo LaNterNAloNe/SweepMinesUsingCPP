@@ -14,6 +14,8 @@ using sf::VideoMode;
 using std::cout;
 using std::endl;
 
+// Visual size of game window. Keep updating (When window resize).
+// Define these as extern to allow access in other files.
 extern unsigned int virtualWindowSizeX;
 extern unsigned int virtualWindowSizeY;
 
@@ -73,12 +75,12 @@ void drawRectangle(RenderWindow &window, float x1, float y1, float x2, float y2,
 
 
 // #Text
-sf::Text createTextObject(const std::string &content, unsigned int fontSize, sf::Color color = sf::Color::Black, int align = CENTER,
-                          sf::Vector2f position = sf::Vector2f(0.f, 0.f), const char *fontpath = "font.ttf");
+sf::Text createTextObject(const std::string &content, unsigned int fontSize, sf::Color color = sf::Color::Black, int align = CENTER, sf::Vector2f position = sf::Vector2f(0.f, 0.f), const char *fontpath = "font.ttf");
 /*****************************************
 ** Define a class for visual text.
-** \attention: This class DO NOT manage the parameter of the instance.
-               Please manage them in the specific page class. Like defining functions that return relative value.
+** \attention: This class DO NOT manage the parameter of the instance. But boast its text object.
+               You can change parameters in text object and draw it to get ideal result.
+               Please manage them in the specific class. Like defining functions that return relative value.
 ** \example: CVisualText startGameButtonText;
              int updateStartGameButtonTextSize() const { return virtualWindowSizeX / 1920 * 40; }
              sf::Vector2f updateStartGameButtonPosition() const { return sf::Vector2f(virtualWindowSizeX * 0.5, virtualWindowSizeY * 0.6); }
@@ -95,8 +97,8 @@ public:
     sf::Color color; // Color of the text.
     Align align; // LEFT, CENTER, RIGHT
     sf::Vector2f position; // Position of the text.
-    sf::Text textObject; // Text object.
     sf::FloatRect area; // Area of the text.
+    sf::Text textObject; // Text object. Change scale or other parameters directly and draw the text.
 
     // Update the area of the text. Using new position passed by specific page class.
     void updateWhenWindowResize(sf::Vector2f newPosition) 
@@ -107,14 +109,15 @@ public:
 };
 
 sf::FloatRect makeTextArea(const sf::Text &text);
-void drawText(sf::RenderWindow &window, const sf::Text &text);
+void drawText(sf::RenderWindow &window, const CVisualText &text);
 
 
 // #Texture
 /*****************************************
 ** Define a class for visual texture.
-** \attention: This class DO NOT manage the parameter of the instance.
-               Please manage them in the specific page class. Like defining functions that return relative value.
+** \attention: This class DO NOT manage the parameter of the instance, and DO NOT store the texture file.
+               So change parameter of the texture directly to get ideal result.
+               Please manage them in the specific class. Like defining functions that return relative value.
 ** \example: CVisualTexture exitButtonTexture("texture/exit.png", updateExitTexturePosition(), updateExitTextureSize());
              sf::Vector2f updateExitTexturePosition() const { return sf::Vector2f(virtualWindowSizeX * 0.05f, virtualWindowSizeX * 0.05f); }
              sf::Vector2f updateExitTextureSize() const { return sf::Vector2f(virtualWindowSizeX / 1920 * 50, virtualWindowSizeX / 1920 * 50); }
@@ -134,6 +137,7 @@ public:
     std::string path; // Path to the texture file.
     sf::Vector2f position; // Position of the texture.
     sf::Vector2f size; // Size of the texture.
+    float scale = 1.f; // Scale of the texture, which is outside setting that is convinient for scaling.
     sf::FloatRect area; // Area of the texture.
 
     // Update the area of the texture. Using new position and size passed by specific page class.
@@ -148,5 +152,5 @@ public:
 typedef std::map<std::string, sf::Texture> TextureCache;
 bool drawTextureWithPath(RenderWindow &window, CVisualTexture &tex);
 void preloadTexture(const std::string &path, TextureCache &textureCache);
-bool drawCachedTexture(RenderWindow &window, float x, float y, float size, const std::string &path, TextureCache &textureCache);
+bool drawCachedTexture(RenderWindow &window, CVisualTexture &tex, TextureCache &textureCache);
 void freePreloadTextureCache(TextureCache &textureCache);

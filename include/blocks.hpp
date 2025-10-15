@@ -3,6 +3,7 @@
 
 #include "visualize.hpp"
 #include "PageSetting.hpp"
+#include "debug.hpp"
 #include <vector>
 #include <memory>
 #include <random>
@@ -34,8 +35,10 @@ public:
     bool isFlagged() const { return flagged; }
 
     // Set and get the position of this block.
-    void setPosition(sf::FloatRect position) { this->position = position; };
-    sf::FloatRect getPosition() const { return position; };
+    void setPosition(sf::FloatRect position) { blockTexture.area = position;
+        blockTexture.position = {position.left + blockTexture.size.x / 2, position.top + blockTexture.size.x / 2};
+    }; // Set the position of the block texture to the center of the block and set the area.
+    sf::FloatRect getPosition() const { return blockTexture.area; };
 
     // now define virtual function for different derive class to override
     virtual void setMineCountAround (int count, int x, int y, int boardSizeX, int boardSizeY) { return; }
@@ -45,13 +48,15 @@ public:
     virtual void explode() { return; }
     virtual bool isExplode() const { return exploded; }
 
+    // The texture of this block.
+    CVisualTexture blockTexture; // The texture of this block.
+
 protected:
     bool revealed; // Whether this block has been revealed. For each block.
     short type; // The type of this block, which can be SAFE, MINE or UNKNOWN. For each block.
     bool flagged = false; // Whether this block has been flagged. Defalt false. For each block.
     bool exploded = false; // Whether this block has been exploded. Defalt false. Especially for mine block.
-
-    sf::FloatRect position; // The position of this block in the game board.
+    
 // define friend function to access private member
 };
 
@@ -80,11 +85,17 @@ public:
     void explode() override { exploded = true; }
 };
 
+// Transform the mine count to the texture name.
+const std::string transformMineCountToTextureName(int mineCount);
+const std::string transformThemeToTextureThemePath(int theme);
 
 // Gameboard class
 class CGameBoard
 {
 public:
+    // Defalt constructor.
+    CGameBoard() {}
+    
     // Initialize the game board.
     void initialize(int boardSizeX = 30, int boardSizeY = 20, int mineCount = 80);
 
@@ -194,6 +205,9 @@ public:
         blocks.clear();
     }
 
+    // // Update gameboard's area and blocks' visual parameter when window resized.
+    void updateBoardAndBlockVisualization();
+
     // Get clicked block position.
     sf::Vector2i getClickedBlockPosition(sf::RenderWindow &window, const sf::Event &event, const sf::FloatRect &boardBounds, const float blockSize);
 
@@ -226,7 +240,8 @@ private:
     // Texture cache
     TextureCache gameBoardTexture;
     bool isTextureLoaded = false;
-};
 
-// Transform the mine count to the texture name.
-const std::string transformMineCountToTextureName(int mineCount);
+    // Game board block textures.
+    // To better manage the texture, each block own its texture infomation. 
+    // See function void initialize(int, int, int) for further infomation.
+};

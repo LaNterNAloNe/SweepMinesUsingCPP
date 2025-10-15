@@ -4,8 +4,8 @@
 CGlobalGameSetting globalSettings;
 
 // define global virtual window size parameter.
-unsigned int virtualWindowSizeX = 0;
-unsigned int virtualWindowSizeY = 0;
+unsigned int WindowSizeX = 0;
+unsigned int WindowSizeY = 0;
 
 
 int main()

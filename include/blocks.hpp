@@ -97,7 +97,7 @@ public:
     CGameBoard() {}
     
     // Initialize the game board.
-    void initialize(int boardSizeX = 30, int boardSizeY = 20, int mineCount = 80);
+    void initialize(int boardSizeX, int boardSizeY, int mineCount);
 
     // Handle game event
     void handleEvent(sf::RenderWindow &window, sf::Event &event);
@@ -185,7 +185,7 @@ public:
     void revealNearbyUnflaggedBlock(int x, int y); // Represent revealing nearby unflagged blocks if flagged blocks equal to mine blocks around 8 blocks.
 
     // Check if game finished
-    bool isGameFinished() { return isGamewon || isGameLost != NONE; }
+    bool isGameFinished() { return isGameWon || isGameLost; }
     bool isMineRevealed() { return isGameLost == MINE_REVEALED; }
 
     // Texture cache
@@ -196,7 +196,7 @@ public:
     // Reset the game board.
     void reset() 
     { 
-        isGamewon = false; 
+        isGameWon = false; 
         isGameLost = false;
         gameStatus = NONE;
         revealedBlocksCount = 0;
@@ -226,7 +226,7 @@ private:
     int revealedBlocksCount;
     int revealedMinesCount;
     int mineCount;
-    bool isGamewon = false;
+    bool isGameWon = false;
     bool isGameLost = false;
     enum _gameStatus
     {

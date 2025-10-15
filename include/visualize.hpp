@@ -16,8 +16,8 @@ using std::endl;
 
 // Visual size of game window. Keep updating (When window resize).
 // Define these as extern to allow access in other files.
-extern unsigned int virtualWindowSizeX;
-extern unsigned int virtualWindowSizeY;
+extern unsigned int WindowSizeX;
+extern unsigned int WindowSizeY;
 
 // LEGACY, do not use unless neccessary
 // Get the area of a button using Marco Function
@@ -82,15 +82,20 @@ sf::Text createTextObject(const std::string &content, unsigned int fontSize, sf:
                You can change parameters in text object and draw it to get ideal result.
                Please manage them in the specific class. Like defining functions that return relative value.
 ** \example: CVisualText startGameButtonText;
-             int updateStartGameButtonTextSize() const { return virtualWindowSizeX / 1920 * 40; }
-             sf::Vector2f updateStartGameButtonPosition() const { return sf::Vector2f(virtualWindowSizeX * 0.5, virtualWindowSizeY * 0.6); }
+             int updateStartGameButtonTextSize() const { return WindowSizeX / 1920 * 40; }
+             sf::Vector2f updateStartGameButtonPosition() const { return sf::Vector2f(WindowSizeX * 0.5, WindowSizeY * 0.6); }
 *****************************************/
 class CVisualText
 {
 public:
-    // Constructor.
+    // Normal constructor.
     CVisualText(const std::string &content, unsigned int fontSize, sf::Color color, Align align, sf::Vector2f position) : 
         content(content), fontSize(fontSize), color(color), align(align), position(position) { updateWhenWindowResize(position); }
+    // Copy constructor.
+    CVisualText(const CVisualText &other) : 
+        content(other.content), fontSize(other.fontSize), color(other.color), align(other.align), position(other.position) { updateWhenWindowResize(position); }
+    // Default constructor.
+    CVisualText() {}
 
     std::string content; // Content of the text.
     unsigned int fontSize; // Font size of the text, commonly decide its height.
@@ -119,8 +124,8 @@ void drawText(sf::RenderWindow &window, const CVisualText &text);
                So change parameter of the texture directly to get ideal result.
                Please manage them in the specific class. Like defining functions that return relative value.
 ** \example: CVisualTexture exitButtonTexture("texture/exit.png", updateExitTexturePosition(), updateExitTextureSize());
-             sf::Vector2f updateExitTexturePosition() const { return sf::Vector2f(virtualWindowSizeX * 0.05f, virtualWindowSizeX * 0.05f); }
-             sf::Vector2f updateExitTextureSize() const { return sf::Vector2f(virtualWindowSizeX / 1920 * 50, virtualWindowSizeX / 1920 * 50); }
+             sf::Vector2f updateExitTexturePosition() const { return sf::Vector2f(WindowSizeX * 0.05f, WindowSizeX * 0.05f); }
+             sf::Vector2f updateExitTextureSize() const { return sf::Vector2f(WindowSizeX / 1920 * 50, WindowSizeX / 1920 * 50); }
 *****************************************/
 class CVisualTexture
 {

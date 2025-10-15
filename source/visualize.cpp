@@ -9,21 +9,21 @@ void initVisualize(RenderWindow &window, const std::string &title) {
     VideoMode desktopMode = VideoMode::getDesktopMode();
 
     // Set the virtual window size to the desktop resolution first, used to calculate initial window size.
-    virtualWindowSizeX = desktopMode.width;
-    virtualWindowSizeY = desktopMode.height;
+    WindowSizeX = desktopMode.width;
+    WindowSizeY = desktopMode.height;
     
     // Set the window size to 50% of the desktop resolution and set the window unresizable.
     window.create(VideoMode(desktopMode.width / 1.5, desktopMode.height / 1.5), title, 
     sf::Style::Titlebar | sf::Style::Close | sf::Style::Resize);
 
     // Then inherit the window size.
-    virtualWindowSizeX = window.getSize().x;
-    virtualWindowSizeY = window.getSize().y;
+    WindowSizeX = window.getSize().x;
+    WindowSizeY = window.getSize().y;
 
     // Set virtual coordinate system to 1920x1080 for consistency across different screen resolutions.
-    sf::View view(sf::FloatRect(0.f, 0.f, virtualWindowSizeX, virtualWindowSizeY));
+    sf::View view(sf::FloatRect(0.f, 0.f, WindowSizeX, WindowSizeY));
     // Set graphic center
-    view.setCenter(virtualWindowSizeX / 2, virtualWindowSizeY / 2);
+    view.setCenter(WindowSizeX / 2, WindowSizeY / 2);
     window.setView(view);
 
     /* OUTPUT */
@@ -36,15 +36,15 @@ void checkWindowResize(sf::RenderWindow &window, sf::Event &event)
     if (event.type == sf::Event::Resized)
     {
         // 更新虚拟画布尺寸为窗口新尺寸
-        virtualWindowSizeX = event.size.width;
-        virtualWindowSizeY = event.size.height;
+        WindowSizeX = event.size.width;
+        WindowSizeY = event.size.height;
 
         // 更新视图为新的虚拟画布尺寸
-        sf::View view(sf::FloatRect(0.f, 0.f, virtualWindowSizeX, virtualWindowSizeY));
-        view.setCenter(virtualWindowSizeX / 2.f, virtualWindowSizeY / 2.f);
+        sf::View view(sf::FloatRect(0.f, 0.f, WindowSizeX, WindowSizeY));
+        view.setCenter(WindowSizeX / 2.f, WindowSizeY / 2.f);
         window.setView(view);
 
-        cout << "\33[34m[INFO]\33[0m " << "Window resized to: " << virtualWindowSizeX << "x" << virtualWindowSizeY << endl;
+        cout << "\33[34m[INFO]\33[0m " << "Window resized to: " << WindowSizeX << "x" << WindowSizeY << endl;
     }
 }
 

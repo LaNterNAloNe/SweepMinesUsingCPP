@@ -14,12 +14,28 @@ void CPageGame::handleEvent(sf::RenderWindow &window, sf::Event &event, int &cur
     // Handle mouse event
     else if (event.type == sf::Event::MouseButtonPressed)
     {
-        if (isInGame)
+        if (isMouseClickInArea(window, event, difficultyEasy.area) && isInGame == false)
+        {
+            difficultyChosen = DIFFICULTY_EASY;
+            isMapDefined = true;
+            cout << "\33[34m[INFO]\33[0m " << getPageName(GAME_PAGE) << " 'Easy' button clicked." << endl;
+        }
+        else if (isMouseClickInArea(window, event, difficultyMedium.area) && isInGame == false)
+        {
+            difficultyChosen = DIFFICULTY_MEDIUM;
+            isMapDefined = true;
+            cout << "\33[34m[INFO]\33[0m " << getPageName(GAME_PAGE) << " 'Medium' button clicked." << endl;
+        }
+        else if (isMouseClickInArea(window, event, difficultyHard.area) && isInGame == false)
+        {
+            difficultyChosen = DIFFICULTY_HARD;
+            isMapDefined = true;
+            cout << "\33[34m[INFO]\33[0m " << getPageName(GAME_PAGE) << " 'Hard' button clicked." << endl;
+        }
+        else if (isInGame)
         {
             gameBoard.handleEvent(window, event);
         }
-        
-        cout << "Revealed block counts: " << gameBoard.getRevealedBlocksCount() << endl;
 
         if (isMouseClickInArea(window, event, returnButton.area))
         {
@@ -37,11 +53,11 @@ void CPageGame::handleEvent(sf::RenderWindow &window, sf::Event &event, int &cur
 // Update the game page.
 void CPageGame::update(sf::RenderWindow &window, sf::Event event)
 {
-    // If the game start, update the animation.
-    if (isGameStart == true)
+    // If map is defined and game is not started, start the game.
+    if (isMapDefined == true && isInitialized == false && isInGame == false)
     {
-        gameBoard.initialize();
-        isGameStart = false;
+        cout << "\33[34m[INFO]\33[0m " << getPageName(GAME_PAGE) << " game started." << endl;
+        startGame(difficultyChosen);
         isInitialized = true;
         isInGame = true;
     }
@@ -52,9 +68,10 @@ void CPageGame::update(sf::RenderWindow &window, sf::Event event)
         gameBoard.update();
     }
 
-    // Check if game finished
-    if (gameBoard.isGameFinished())
+    // If game is in progress and detect game finished, set game over, only be triggerred when isInGame = true.
+    if (gameBoard.isGameFinished() && isInGame == true)
     {
+        cout << "\33[34m[INFO]\33[0m " << getPageName(GAME_PAGE) << " game finished." << endl;
         isInGame = false;
         isGameOver = true;
     }
@@ -74,8 +91,18 @@ void CPageGame::update(sf::RenderWindow &window, sf::Event event)
         returnButton.updateWhenWindowResize(updateReturnButtonPosition(), updateReturnButtonSize());
         restartButton.updateWhenWindowResize(updateRestartButtonPosition(), updateRestartButtonSize());
 
-        // Update gameboard's area and blocks' visual parameter.
-        gameBoard.updateBoardAndBlockVisualization();
+        // Update notification text.
+        notificationToPlayer.updateWhenWindowResize(updateNotificationToPlayerPosition());
+        // Update difficulty buttons.
+        difficultyEasy.updateWhenWindowResize(updateDifficultyEasyPosition());
+        difficultyMedium.updateWhenWindowResize(updateDifficultyMediumPosition());
+        difficultyHard.updateWhenWindowResize(updateDifficultyHardPosition());
+
+        // Update gameboard's area and blocks' visual parameter if game is initialized.
+        if (isInitialized == true)
+        {
+            gameBoard.updateBoardAndBlockVisualization();
+        }
     }
 }
 
@@ -83,13 +110,41 @@ void CPageGame::update(sf::RenderWindow &window, sf::Event event)
 void CPageGame::render(sf::RenderWindow &window, sf::Event event)
 {
     // Draw white background.
-    drawRectangle(window, 0, 0, virtualWindowSizeX, virtualWindowSizeY, sf::Color::White);
+    drawRectangle(window, 0, 0, WindowSizeX, WindowSizeY, sf::Color::White);
 
-    // Render the game.
-    if (isInGame == true || isGameOver == true)
+    // Select difficulty or customize map
+    if (isMapDefined == false)
     {
-        // render game board.
-        gameBoard.render(window, event);
+        // Render difficulty selection.
+        // Render notification text.
+        drawText(window, notificationToPlayer);
+        // Render difficulty buttons.
+        if (isMouseStayInArea(window, event, difficultyEasy.area))
+            difficultyEasy.textObject.setScale(1.1f, 1.1f);
+        else
+            difficultyEasy.textObject.setScale(1.f, 1.f);
+        drawText(window, difficultyEasy);
+
+        if (isMouseStayInArea(window, event, difficultyMedium.area))
+            difficultyMedium.textObject.setScale(1.1f, 1.1f);
+        else
+            difficultyMedium.textObject.setScale(1.f, 1.f);
+        drawText(window, difficultyMedium);
+
+        if (isMouseStayInArea(window, event, difficultyHard.area))
+            difficultyHard.textObject.setScale(1.1f, 1.1f);
+        else
+            difficultyHard.textObject.setScale(1.f, 1.f);
+        drawText(window, difficultyHard);
+    }
+    else
+    {
+        // Render the game.
+        if ((isInGame == true || isGameOver == true) && isMapDefined == true)
+        {
+            // render game board.
+            gameBoard.render(window, event);
+        }
     }
 
     // Render the return button.
@@ -115,7 +170,9 @@ void CPageGame::backToBeginning(sf::RenderWindow &window, int &currentPage, cons
     gameBoard.freeGameBoardTexture();
     cout << "\33[34m[INFO]\33[0m Texture cache cleared." << endl;
     
-    isGameStart = true;
+    // Set all parameter false.
+    difficultyChosen = NONE;
+    isMapDefined = false;
     isInitialized = false;
     isInGame = false;
     isGameOver = false;
@@ -125,10 +182,11 @@ void CPageGame::backToBeginning(sf::RenderWindow &window, int &currentPage, cons
 // Restart the game.
 void CPageGame::restartGame()
 {
-    isGameStart = true;
+    // Here we think that map is defined and just need to reinitialize the game board.
     isInitialized = false;
     isInGame = false;
     isGameOver = false;
+
     gameBoard.reset();
 
     cout << "\33[34m[INFO]\33[0m Game restarted." << endl;
@@ -148,3 +206,25 @@ void CPageGame::freeFunctionButtonTexture()
     freePreloadTextureCache(functionButtonTexture);
     isTextureLoaded = false;
 }
+
+// Start game.
+void CPageGame::startGame(int difficulty)
+{
+    isInGame = true;
+    isMapDefined = true;
+
+    switch (difficulty)
+    {
+    case DIFFICULTY_EASY:
+        gameBoard.initialize(10, 10, 10);
+        break;
+    case DIFFICULTY_MEDIUM:
+        gameBoard.initialize(15, 15, 40);
+        break;
+    case DIFFICULTY_HARD:
+        gameBoard.initialize(30, 20, 100);
+        break;
+    default:
+        break;
+    }
+};

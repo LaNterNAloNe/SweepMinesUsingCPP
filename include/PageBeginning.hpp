@@ -32,15 +32,6 @@ public:
     void freeBeginningPageTexture();
 
 private:
-    // Hover state of the beginning page. (To decide which button's apperance changes)
-    enum hoverState
-    {
-        NONE = 0,
-        EXIT = 1,
-        START_GAME = 2,
-    };
-    hoverState currentHoverState = NONE;
-
     // Texture of the beginning page.
     TextureCache beginningPageTexture;
     bool isTextureLoaded = false;
@@ -48,26 +39,26 @@ private:
     // Mine texture.
     CVisualTexture mineTexture;
     sf::Vector2f updateMineTextureSize() const { return sf::Vector2f(
-        std::min(virtualWindowSizeX / 1920.f * 200.f, virtualWindowSizeY / 1080.f * 200.f), 
-        std::min(virtualWindowSizeX / 1920.f * 200.f, virtualWindowSizeY / 1080.f * 200.f)); }
-    sf::Vector2f updateMineTexturePosition() const { return sf::Vector2f(virtualWindowSizeX * 0.5f, virtualWindowSizeY * 0.4f); }
+        std::min(WindowSizeX / 1920.f * 200.f, WindowSizeY / 1080.f * 200.f), 
+        std::min(WindowSizeX / 1920.f * 200.f, WindowSizeY / 1080.f * 200.f)); }
+    sf::Vector2f updateMineTexturePosition() const { return sf::Vector2f(WindowSizeX * 0.5f, WindowSizeY * 0.4f); }
 
     // Text object of the beginning page.
     CVisualText startGameButtonText;
-    int updateStartGameButtonTextSize() const { return std::min(virtualWindowSizeX / 1920.f * 40.f, virtualWindowSizeY / 1080.f * 40.f); }
-    sf::Vector2f updateStartGameButtonTextPosition() const { return sf::Vector2f(virtualWindowSizeX * 0.5f, virtualWindowSizeY * 0.6f); }
+    int updateStartGameButtonTextSize() const { return std::min(WindowSizeX / 1920.f * 40.f, WindowSizeY / 1080.f * 40.f); }
+    sf::Vector2f updateStartGameButtonTextPosition() const { return sf::Vector2f(WindowSizeX * 0.5f, WindowSizeY * 0.6f); }
 
     // Exit button, and its absolute parameter, which is managed by CPageBeginning, not CVisualTexture.
     CVisualTexture exitButtonTexture;
-    sf::Vector2f updateExitTexturePosition() const { return sf::Vector2f(virtualWindowSizeX * 0.03f, virtualWindowSizeX * 0.03f); }
-    sf::Vector2f updateExitTextureSize() const { return sf::Vector2f(virtualWindowSizeX / 1920.f * 50.f, virtualWindowSizeX / 1920.f * 50.f); }
+    sf::Vector2f updateExitTexturePosition() const { return sf::Vector2f(WindowSizeX * 0.03f, WindowSizeX * 0.03f); }
+    sf::Vector2f updateExitTextureSize() const { return sf::Vector2f(WindowSizeX / 1920.f * 50.f, WindowSizeX / 1920.f * 50.f); }
 
     CVisualTexture exitButtonTextureHover;
 
     // Exit button text when hover.
     CVisualText exitButtonText;
-    int updateExitTextSize() const { return std::min(virtualWindowSizeX / 1920.f * 30.f, virtualWindowSizeY / 1080.f * 30.f); }
-    sf::Vector2f updateExitTextPosition() const { return sf::Vector2f(virtualWindowSizeX * 0.03f + exitButtonTexture.area.width, virtualWindowSizeX * 0.03f); }
+    int updateExitTextSize() const { return std::min(WindowSizeX / 1920.f * 30.f, WindowSizeY / 1080.f * 30.f); }
+    sf::Vector2f updateExitTextPosition() const { return sf::Vector2f(WindowSizeX * 0.03f + exitButtonTexture.area.width, WindowSizeX * 0.03f); }
     // Exit button text's y position equals to exit button texture's y position.
 };
 

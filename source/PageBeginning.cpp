@@ -3,21 +3,6 @@
 /* Handle events on the beginning page */
 void CPageBeginning::handleEvent(sf::RenderWindow &window, sf::Event &event, int &currentPage, const std::map<int, std::unique_ptr<CPage>> &pages)
 {
-    // Check if the "Exit" button is hovered.
-    if (isMouseStayInArea(window, event, exitButtonTexture.area))
-    {
-        currentHoverState = EXIT;
-    }
-    // Check if the "Start Game" button is hovered.
-    else if (isMouseStayInArea(window, event, startGameButtonText.area))
-    {
-        currentHoverState = START_GAME;
-    }
-    else
-    {
-        currentHoverState = NONE;
-    }
-
     // Check if the "Exit" button is clicked.
     if (isMouseClickInArea(window, event, exitButtonTexture.area) == LEFTCLICK)
     {
@@ -38,19 +23,7 @@ void CPageBeginning::handleEvent(sf::RenderWindow &window, sf::Event &event, int
 /* Update beginning page */
 void CPageBeginning::update(sf::RenderWindow &window, sf::Event event)
 {
-    static hoverState lastHoverState = NONE;
-
-    if (currentHoverState != lastHoverState)
-    {
-        // Update Start Game button scale
-        startGameButtonText.textObject.setScale(currentHoverState == START_GAME ? 0.9f : 1.f,
-                                     currentHoverState == START_GAME ? 0.9f : 1.f);
-
-        // Update Exit button color
-        exitButtonText.textObject.setFillColor(currentHoverState == EXIT ? sf::Color::Black : sf::Color::Transparent);
-
-        lastHoverState = currentHoverState;
-    }
+        
 
     // React to window resizing.
     if (event.type == sf::Event::Resized || lastWindowSize != static_cast<sf::Vector2f>(window.getSize()))
@@ -79,16 +52,23 @@ void CPageBeginning::render(sf::RenderWindow &window, sf::Event event)
 {
     // Draw standard background.
     sf::Color tmpColor = sf::Color::White;
-    drawRectangle(window, 0, 0, virtualWindowSizeX, virtualWindowSizeY, tmpColor);
+    drawRectangle(window, 0, 0, WindowSizeX, WindowSizeY, tmpColor);
 
     // Draw a mine at the center of the screen.
     drawCachedTexture(window, mineTexture, beginningPageTexture);
 
     // Draw a "Start Game" button at the center of the screen.
+    if (isMouseStayInArea(window, event, startGameButtonText.area))
+        startGameButtonText.textObject.setScale(1.1f, 1.1f);
+    else
+        startGameButtonText.textObject.setScale(1.f, 1.f);
     drawText(window, startGameButtonText);
 
     // Draw a "Exit" button at the center of the screen.
-    drawCachedTexture(window, currentHoverState == EXIT ? exitButtonTextureHover : exitButtonTexture, beginningPageTexture);
+    drawCachedTexture(window, isMouseStayInArea(window, event, exitButtonTexture.area) ? exitButtonTextureHover : exitButtonTexture, beginningPageTexture);
+
+    // Draw Exit button color
+    exitButtonText.textObject.setFillColor(isMouseStayInArea(window, event, exitButtonTexture.area) ? sf::Color::Black : sf::Color::Transparent);
     drawText(window, exitButtonText);
 }
 

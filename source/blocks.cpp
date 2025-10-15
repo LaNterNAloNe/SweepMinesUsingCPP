@@ -30,6 +30,8 @@ void CGameBoard::handleEvent(sf::RenderWindow &window, sf::Event &event)
     // Wait for transplant
     sf::Vector2i clickedBlock = getClickedBlockPosition(window, event, getBoardArea(), getBlockSize());
 
+    cout << "Clicked block: (" << clickedBlock.x << ", " << clickedBlock.y << ")" << endl;
+
     // Return if get invalid clicked block coordinate.
     if (clickedBlock.x == -1 || clickedBlock.y == -1)
     {
@@ -92,7 +94,7 @@ void CGameBoard::update()
     if (revealedBlocksCount == (boardSizeX * boardSizeY - mineCount) && gameStatus != MINE_REVEALED)
     {
         gameStatus = WON;
-        isGamewon = true;
+        isGameWon = true;
         revealAllMineBlocks();
         cout << "\33[34m[INFO]\33[0m Game \033[32mWon.\033[0m" << endl;
     } 
@@ -366,18 +368,16 @@ void CGameBoard::initialize(int boardSizeX, int boardSizeY, int mineCount)
     this->boardSizeY = boardSizeY;
 
     // Generate the game board area according to the board size, align to the center of the virtual window.
-    float blockSizeX = (virtualWindowSizeX - 80) / boardSizeX;
-    float blockSizeY = (virtualWindowSizeY - 80) / boardSizeY;
+    float blockSizeX = (WindowSizeX - 80) / boardSizeX;
+    float blockSizeY = (WindowSizeY - 80) / boardSizeY;
     float blockSize = std::min(blockSizeX, blockSizeY);
     float boardX = blockSize * boardSizeX;
     float boardY = blockSize * boardSizeY;
-    float boardStartX = (virtualWindowSizeX - boardX) / 2;
-    float boardStartY = (virtualWindowSizeY - boardY) / 2;
+    float boardStartX = (WindowSizeX - boardX) / 2;
+    float boardStartY = (WindowSizeY - boardY) / 2;
 
     // Set the game board area.
     boardArea = sf::FloatRect(boardStartX, boardStartY, boardX, boardY);
-
-    cout << "\33[32m[DEBUG]\33[0m Board area: " << boardArea.left << ", " << boardArea.top << ", " << boardArea.width << ", " << boardArea.height << endl;
 
     // Set the row size of the game board.
     // Attention: Avoid resizing blocks behind the first block of the column,
@@ -455,13 +455,13 @@ void CGameBoard::initialize(int boardSizeX, int boardSizeY, int mineCount)
 void CGameBoard::updateBoardAndBlockVisualization()
 {
     // Update gameboard's area.
-    float blockSizeX = (virtualWindowSizeX - 80) / boardSizeX;
-    float blockSizeY = (virtualWindowSizeY - 80) / boardSizeY;
+    float blockSizeX = (WindowSizeX - 80) / boardSizeX;
+    float blockSizeY = (WindowSizeY - 80) / boardSizeY;
     float blockSize = std::min(blockSizeX, blockSizeY);
     float boardX = blockSize * boardSizeX;
     float boardY = blockSize * boardSizeY;
-    float boardStartX = (virtualWindowSizeX - boardX) / 2;
-    float boardStartY = (virtualWindowSizeY - boardY) / 2;
+    float boardStartX = (WindowSizeX - boardX) / 2;
+    float boardStartY = (WindowSizeY - boardY) / 2;
     boardArea = sf::FloatRect(boardStartX, boardStartY, boardX, boardY);
 
     // Update blocks' position.

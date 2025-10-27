@@ -26,6 +26,12 @@ void initVisualize(RenderWindow &window, const std::string &title) {
     view.setCenter(WindowSizeX / 2, WindowSizeY / 2);
     window.setView(view);
 
+    // Set the window icon.
+    sf::Image icon;
+    if (icon.loadFromFile("../icon.png")) {
+        window.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
+    }
+
     /* OUTPUT */
     cout << "\33[34m[INFO]\33[0m Visualization window initialized." << endl;
 }
@@ -283,9 +289,6 @@ void drawText(sf::RenderWindow &window, const CVisualText &text)
 
 // #Texture
 
-// define texture cache as global variable
-;
-
 // Draw texture using path directly. (Not recommended unless necessary)
 // It will directly load texture from file and draw it, which causes low performance.
 bool drawTextureWithPath(sf::RenderWindow &window, CVisualTexture &tex)
@@ -386,5 +389,101 @@ void freePreloadTextureCache(TextureCache &textureCache)
     textureCache.clear();
 
     // output
-    std::cout << "\033[32m[INFO]\033[0m Texture cache cleared." << std::endl;
+    std::cout << "\033[34m[INFO]\033[0m Texture cache cleared." << std::endl;
+}
+
+
+// #Input bar
+CInputBox::CInputBox(const sf::Vector2f &position,
+                     const sf::Vector2f &size,
+                     const std::string &fontPath,
+                     unsigned int characterSize,
+                     const std::string &placeholderText,
+                     std::size_t maxLength)
+{
+    // Set max length.
+    this->maxLength = maxLength;
+
+    // Set box parameter.
+    box.setSize(size);
+    box.setOrigin(size.x / 2.f, size.y / 2.f);
+    box.setPosition(position);
+    box.setFillColor(sf::Color::White);
+    box.setOutlineColor(sf::Color::Black);
+    box.setOutlineThickness(2.f);
+
+    // Set font parameter.
+    if (font.loadFromFile("../font/" + fontPath))
+    {
+        // Set text parameter.
+        text.setFont(font);
+        text.setCharacterSize(characterSize);
+        text.setFillColor(textColor);
+        text.setPosition(position);
+
+        // Set placeholder parameter.
+        placeholder.setFont(font);
+        placeholder.setCharacterSize(characterSize);
+        placeholder.setFillColor(placeholderColor);
+        placeholder.setString(placeholderText);
+        placeholder.setOrigin(placeholder.getGlobalBounds().width / 2.f, placeholder.getGlobalBounds().height / 2.f);
+        placeholder.setPosition(position);
+    }
+    else 
+    {
+        std::cout << "\33[31m[ERROR]\33[0m Failed to load font: " << fontPath << std::endl;
+    }
+}
+
+// Handle input event when activated.
+void CInputBox::handleEvent(const sf::Event &event)
+{
+    if (!active)
+        return;
+    
+    // Still check if the event type is TextEntered to avoid errors originating in calling this function.
+    if (event.type == sf::Event::TextEntered)
+    {
+        char c = static_cast<char>(event.text.unicode);
+        std::string temp(1, c);
+
+        // Check if the input is a valid character.
+        if (std::regex_match(temp, validInputRegex) && inputString.length() < maxLength)
+        {
+            // Append the character to the input string.
+            inputString += static_cast<char>(event.text.unicode);
+            text.setString(inputString);
+        }
+        else if (event.text.unicode == '\b' && inputString.length() > 0)
+        {
+            // Remove the last character from the input string.
+            inputString.erase(inputString.length() - 1);
+            text.setString(inputString);
+
+        }
+
+        // Update text origin to keep text object center to the box.
+        text.setOrigin(text.getGlobalBounds().width / 2, text.getGlobalBounds().height / 2);
+    }
+}
+
+// Update the input box when window resized.
+void CInputBox::updateWhenWindowResize(sf::Vector2f newPosition, sf::Vector2f newSize, sf::Vector2f newFontSize)
+{
+    box.setSize(newSize);
+    box.setOrigin(newSize.x / 2.f, newSize.y / 2.f);
+    box.setPosition(newPosition);
+
+    text.setPosition(newPosition);
+    text.setCharacterSize(newFontSize.y);
+
+    placeholder.setPosition(newPosition);
+    placeholder.setCharacterSize(newFontSize.y);
+};
+
+
+/* Check function */
+bool isStringAllNum(const std::string &str)
+{
+    return std::all_of(str.begin(), str.end(), ::isdigit);
 }

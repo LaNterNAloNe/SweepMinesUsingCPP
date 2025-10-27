@@ -114,6 +114,9 @@ public:
     // get block's size in board
     float getBlockSize() const { return blocks[0][0]->getPosition().width; }
 
+    // set board size
+    void setMapSizeAndMines(int boardSizeX, int boardSizeY, int mineCount) { this->boardSizeX = boardSizeX; this->boardSizeY = boardSizeY; this->mineCount = mineCount; }
+
     // get board size
     int getBoardSizeX() const { return boardSizeX; }
     int getBoardSizeY() const { return boardSizeY; }

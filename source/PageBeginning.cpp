@@ -11,7 +11,7 @@ void CPageBeginning::handleEvent(sf::RenderWindow &window, sf::Event &event, int
         cout << "\33[34m[INFO]\33[0m Exiting game." << endl;
     }
     // Check if the "Start Game" button is clicked.
-    else if (isMouseClickInArea(window, event, startGameButtonText.area) == LEFTCLICK)
+    else if (isMouseClickInArea(window, event, startGameButtonText.textObject.getGlobalBounds()) == LEFTCLICK)
     {
         cout << "\33[34m[INFO]\33[0m " << getPageName(BEGINNING_PAGE) << " 'Start Game' button clicked." << endl;
         changePage(window, currentPage, GAME_PAGE, pages);
@@ -58,7 +58,7 @@ void CPageBeginning::render(sf::RenderWindow &window, sf::Event event)
     drawCachedTexture(window, mineTexture, beginningPageTexture);
 
     // Draw a "Start Game" button at the center of the screen.
-    if (isMouseStayInArea(window, event, startGameButtonText.area))
+    if (isMouseStayInArea(window, event, startGameButtonText.textObject.getGlobalBounds()))
         startGameButtonText.textObject.setScale(1.1f, 1.1f);
     else
         startGameButtonText.textObject.setScale(1.f, 1.f);

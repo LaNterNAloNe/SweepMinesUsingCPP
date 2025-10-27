@@ -7,6 +7,8 @@ CGlobalGameSetting globalSettings;
 unsigned int WindowSizeX = 0;
 unsigned int WindowSizeY = 0;
 
+// Define the valid input regex. (Extern variable)
+std::regex validInputRegex("^[a-zA-Z0-9]+$");
 
 int main()
 {
@@ -16,7 +18,7 @@ int main()
 
     // Create the main window for the application and initialize it.
     RenderWindow mainWindow;
-    initVisualize(mainWindow, "SweepMine");
+    initVisualize(mainWindow, "Mine Sweeper: A simple game create by C++");
 
     std::vector<TrailPoint> trail;
 

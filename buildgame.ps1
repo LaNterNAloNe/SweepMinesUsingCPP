@@ -14,6 +14,7 @@ g++ $cppFiles -o ../output/main.exe -lsfml-graphics -lsfml-window -lsfml-system
 # Run the game if the build is successful.
 if ($LASTEXITCODE -eq 0) {
     ../output/main.exe
+    pause
 } else {
     Write-Host "Build failed. Please check the errors above."
     pause

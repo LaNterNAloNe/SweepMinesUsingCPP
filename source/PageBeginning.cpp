@@ -10,6 +10,12 @@ void CPageBeginning::handleEvent(sf::RenderWindow &window, sf::Event &event, int
         window.close();
         cout << "\33[34m[INFO]\33[0m Exiting game." << endl;
     }
+    // Check if the "Settings" button is clicked.
+    else if (isMouseClickInArea(window, event, settingsButtonText.textObject.getGlobalBounds()) == LEFTCLICK)
+    {
+        cout << "\33[34m[INFO]\33[0m " << getPageName(BEGINNING_PAGE) << " 'Settings' button clicked." << endl;
+        changePage(window, currentPage, SETTING_PAGE, pages);
+    }
     // Check if the "Start Game" button is clicked.
     else if (isMouseClickInArea(window, event, startGameButtonText.textObject.getGlobalBounds()) == LEFTCLICK)
     {
@@ -34,6 +40,7 @@ void CPageBeginning::update(sf::RenderWindow &window, sf::Event event)
         // Update the position of the text objects.
         mineTexture.updateWhenWindowResize(updateMineTexturePosition(), updateMineTextureSize());
         startGameButtonText.updateWhenWindowResize(updateStartGameButtonTextPosition());
+        settingsButtonText.updateWhenWindowResize(updateSettingsButtonTextPosition());
         exitButtonTexture.updateWhenWindowResize(updateExitTexturePosition(), updateExitTextureSize());
         exitButtonTextureHover.updateWhenWindowResize(updateExitTexturePosition(), updateExitTextureSize());
         exitButtonText.updateWhenWindowResize(updateExitTextPosition());
@@ -63,6 +70,13 @@ void CPageBeginning::render(sf::RenderWindow &window, sf::Event event)
     else
         startGameButtonText.textObject.setScale(1.f, 1.f);
     drawText(window, startGameButtonText);
+
+    // Draw a "Settings" button at the center of the screen.
+    if (isMouseStayInArea(window, event, settingsButtonText.textObject.getGlobalBounds()))
+        settingsButtonText.textObject.setScale(1.1f, 1.1f);
+    else
+        settingsButtonText.textObject.setScale(1.f, 1.f);
+    drawText(window, settingsButtonText);
 
     // Draw a "Exit" button at the center of the screen.
     drawCachedTexture(window, isMouseStayInArea(window, event, exitButtonTexture.area) ? exitButtonTextureHover : exitButtonTexture, beginningPageTexture);

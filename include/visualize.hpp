@@ -2,7 +2,7 @@
 #pragma once
 
 #include "SFML/Graphics.hpp"
-#include "PageSetting.hpp"
+// #include "PageSetting.hpp" // Avoid circular include dependency. You know I crashed the code because of this.
 #include <iostream>
 #include <cmath>
 #include <map> // include map header for cross-platform compatibility
@@ -42,7 +42,19 @@ extern std::regex validInputRegex;
 /* Visualize initialization */
 void initVisualize(RenderWindow &window, const std::string &title);
 // Check if window size is resized by user and take actions.
-void checkWindowResize(sf::RenderWindow &window, sf::Event &event);
+void checkWindowResize(sf::RenderWindow &window, sf::Event &event, bool isForceUpdate = false);
+// Force window resize. (Set to specific size)
+void forceWindowResize(sf::RenderWindow &window, int width, int height);
+
+// Set window to fullscreen.
+void setWindowToFullscreen(RenderWindow &window, const std::string &title);
+// Set window to windowed mode.
+void setWindowToWindowed(RenderWindow &window, const std::string &title);
+
+
+/* Grocery */
+// Display the current FPS on the window.
+void displayFPS(RenderWindow &window);
 
 
 /* Mouse move event handler */
@@ -161,6 +173,7 @@ public:
 
 // Texture cache.
 typedef std::map<std::string, sf::Texture> TextureCache;
+
 bool drawTextureWithPath(RenderWindow &window, CVisualTexture &tex);
 void preloadTexture(const std::string &path, TextureCache &textureCache);
 bool drawCachedTexture(RenderWindow &window, CVisualTexture &tex, TextureCache &textureCache);

@@ -8,7 +8,7 @@ void CPageGame::handleEvent(sf::RenderWindow &window, sf::Event &event, int &cur
     {
         if (event.key.code == sf::Keyboard::Escape)
         {
-            backToBeginning(window, currentPage, pages);
+            CPageGame::backToBeginning(window, currentPage, pages);
         }
     }
 
@@ -232,7 +232,7 @@ void CPageGame::update(sf::RenderWindow &window, sf::Event event)
 
     // Check if texture preloaded.
     if (!gameBoard.checkIfTextureLoaded())
-        gameBoard.preloadGameBoardTexture();
+        gameBoard.preloadGameBoardTexture(transformThemeToTextureThemePath(globalSettings.theme));
     if (!checkIsTextureLoaded())
         preloadFunctionButtonTexture();
 

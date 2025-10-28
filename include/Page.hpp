@@ -16,6 +16,7 @@ using std::endl;
 enum PageType
 {
     BEGINNING_PAGE,
+    SETTING_PAGE,
     GAME_PAGE,
     ENDING_PAGE
 };

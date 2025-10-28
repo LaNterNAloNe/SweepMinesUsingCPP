@@ -8,6 +8,7 @@
 #include "blocks.hpp"
 #include "debug.hpp"
 #include "visualize.hpp"
+
 #include "PageBeginning.hpp"
 #include "PageGame.hpp"
 #include "PageSetting.hpp"
@@ -16,8 +17,7 @@ using std::cin;
 using std::cout;
 using std::endl;
 
-
-void showLicense() 
+void showAppInfo()
 {
     cout << "---------------------------------------------------------" << endl;
     cout << "SweepMine" << endl;

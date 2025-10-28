@@ -53,6 +53,16 @@ void CGameBoard::handleEvent(sf::RenderWindow &window, sf::Event &event)
             // If the clicked block is a number, just reveal it.
             else
             {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                // If it's the first click and it's a mine or number block, replace surrounding mines to other non-mine blocks.
+                // (Only enabled when option: Use Win7 MineSweeper Feature is on)
+                if (globalSettings.useWin7MineSweeperFeature && gameStatus == NONE && revealedBlocksCount == 0 &&
+                    (getBlockType(clickedBlock.x, clickedBlock.y) == MINE || getBlockType(clickedBlock.x, clickedBlock.y) == NUMBER))
+                {
+                    // replaceMinesAroundToMapRandomly(clickedBlock.x, clickedBlock.y); // To be implemented.
+                } 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
                 // If the clicked block is not empty, set the mine count around.
                 setMineCountAroundForBlock(clickedBlock.x, clickedBlock.y);
                 // Reveal the block.
@@ -123,7 +133,7 @@ void CGameBoard::render(sf::RenderWindow &window, sf::Event &event)
             if (blocks[i][j]->isRevealed() == false)
             {
                 // If the block is not revealed and not flagged, draw the common texture.
-                if (isMouseStayInArea(window, event, blockPosition) && !blocks[i][j]->isFlagged())
+                if (isMouseStayInArea(window, event, blockPosition) && !blocks[i][j]->isFlagged() && globalSettings.theme != CLASSICAL)
                 {
                     // If the block is not flagged and not hovered, draw the common texture.
                     blocks[i][j]->blockTexture.path = "page_game/" + theme + "block_hover.png";
@@ -354,6 +364,18 @@ void CGameBoard::revealBlocksNearbyIfNearbyFlagsEqualNum(int x, int y)
 }
 
 
+// Win7 MineSweeper Feature
+// Replace mines around to map randomly if clicked block is a mine or number block.
+void CGameBoard::replaceSurroundingMinesAroundToMapRandomly(int x, int y)
+{
+    // Check if the block is out of bounds.
+    if (x < 0 || x >= boardSizeX || y < 0 || y >= boardSizeY)
+        return;
+
+    // More implementation to be added.
+}
+
+
 // Initialize the game board. Here, set each block's texture infomation for further use.
 void CGameBoard::initialize(int boardSizeX, int boardSizeY, int mineCount)
 {
@@ -363,7 +385,7 @@ void CGameBoard::initialize(int boardSizeX, int boardSizeY, int mineCount)
     // Initialize the mine count.
     this->mineCount = mineCount;
 
-    // Change size
+    // Initialize the board size.
     this->boardSizeX = boardSizeX;
     this->boardSizeY = boardSizeY;
 
@@ -387,6 +409,12 @@ void CGameBoard::initialize(int boardSizeX, int boardSizeY, int mineCount)
     {
         blocks[i].resize(boardSizeY);
     }
+
+    // Now randomly initialize the blocks with mine blocks and safe blocks.
+    // brife: Step1 - Create a list of all blocks positions and give each block a unique coordination.
+    //        Step2 - Shuffle the list randomly.
+    //        Step3 - Place mines in the shuffled list from begin (0) to preset mine counts - 1 (mineCount - 1).
+    //        Step4 - Fill the remaining blocks with safe blocks.
 
     // Step 1: Generate all possible positions on the board.
     std::vector<std::pair<int, int>> allPositions;
@@ -562,22 +590,24 @@ const std::string transformThemeToTextureThemePath(int theme)
     }
 }
 
-void CGameBoard::preloadGameBoardTexture(std::string theme)
+void CGameBoard::preloadGameBoardTexture(const std::string &theme)
 {
-    preloadTexture("page_game/" + theme + "/block_hover.png", gameBoardTexture);
-    preloadTexture("page_game/" + theme + "/block.png", gameBoardTexture);
-    preloadTexture("page_game/" + theme + "/mine.png", gameBoardTexture);
-    preloadTexture("page_game/" + theme + "/mine_unrevealed.png", gameBoardTexture);
-    preloadTexture("page_game/" + theme + "/flag.png", gameBoardTexture);
-    preloadTexture("page_game/" + theme + "/empty.png", gameBoardTexture);
-    preloadTexture("page_game/" + theme + "/num1.png", gameBoardTexture);
-    preloadTexture("page_game/" + theme + "/num2.png", gameBoardTexture);
-    preloadTexture("page_game/" + theme + "/num3.png", gameBoardTexture);
-    preloadTexture("page_game/" + theme + "/num4.png", gameBoardTexture);
-    preloadTexture("page_game/" + theme + "/num5.png", gameBoardTexture);
-    preloadTexture("page_game/" + theme + "/num6.png", gameBoardTexture);
-    preloadTexture("page_game/" + theme + "/num7.png", gameBoardTexture);
-    preloadTexture("page_game/" + theme + "/num8.png", gameBoardTexture);
+    if (globalSettings.theme != CLASSICAL) // Especially for classical theme, because classical theme has no hover texture.
+        preloadTexture("page_game/" + theme + "block_hover.png", gameBoardTexture);
+    
+    preloadTexture("page_game/" + theme + "block.png", gameBoardTexture);
+    preloadTexture("page_game/" + theme + "mine.png", gameBoardTexture);
+    preloadTexture("page_game/" + theme + "mine_unrevealed.png", gameBoardTexture);
+    preloadTexture("page_game/" + theme + "flag.png", gameBoardTexture);
+    preloadTexture("page_game/" + theme + "empty.png", gameBoardTexture);
+    preloadTexture("page_game/" + theme + "num1.png", gameBoardTexture);
+    preloadTexture("page_game/" + theme + "num2.png", gameBoardTexture);
+    preloadTexture("page_game/" + theme + "num3.png", gameBoardTexture);
+    preloadTexture("page_game/" + theme + "num4.png", gameBoardTexture);
+    preloadTexture("page_game/" + theme + "num5.png", gameBoardTexture);
+    preloadTexture("page_game/" + theme + "num6.png", gameBoardTexture);
+    preloadTexture("page_game/" + theme + "num7.png", gameBoardTexture);
+    preloadTexture("page_game/" + theme + "num8.png", gameBoardTexture);
     isTextureLoaded = true;
 }
 

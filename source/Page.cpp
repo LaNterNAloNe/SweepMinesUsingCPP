@@ -11,6 +11,8 @@ const std::string getPageName(const int page)
         return "\033[36mGAME_PAGE\033[0m";
     case ENDING_PAGE:
         return "\033[36mENDING_PAGE\033[0m";
+    case SETTING_PAGE:
+        return "\033[36mSETTING_PAGE\033[0m";
     default:
         return "\033[36m?UNKNOWN?\033[0m";
     }

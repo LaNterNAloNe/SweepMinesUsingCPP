@@ -169,6 +169,10 @@ public:
         else return UNKNOWN; 
     }
 
+    // Win7 MineSweeper Feature
+    // Replace mines around to map randomly if clicked block is a mine or number block.
+    void replaceSurroundingMinesAroundToMapRandomly(int x, int y);
+
     // find mine count around
     int findMineCountAround(int x, int y);
 
@@ -192,7 +196,7 @@ public:
     bool isMineRevealed() { return isGameLost == MINE_REVEALED; }
 
     // Texture cache
-    void preloadGameBoardTexture(std::string theme = "light_theme");
+    void preloadGameBoardTexture(const std::string &theme);
     void freeGameBoardTexture();
     bool checkIfTextureLoaded() { return isTextureLoaded; };
 

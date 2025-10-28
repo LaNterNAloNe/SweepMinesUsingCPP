@@ -1,7 +1,7 @@
 #include "../include/main.hpp"
 
-// define global game settings parameter.
-CGlobalGameSetting globalSettings;
+// Global game settings. Default settings defined here.
+GameSettings globalSettings = {LIGHT, false, false, true, false};
 
 // define global virtual window size parameter.
 unsigned int WindowSizeX = 0;
@@ -13,12 +13,13 @@ std::regex validInputRegex("^[a-zA-Z0-9]+$");
 int main()
 {
     // Show license that give a brife introduction
-    showLicense();
-    std::cout << "\33[34m[INFO]\33[0m Using debugging terminal." << std::endl;
+    showAppInfo();
+    cout << "\33[34m[INFO]\33[0m Using debugging terminal." << endl;
 
     // Create the main window for the application and initialize it.
     RenderWindow mainWindow;
     initVisualize(mainWindow, "Mine Sweeper: A simple game create by C++");
+    bool isInWindowedMode = true;
 
     std::vector<TrailPoint> trail;
 
@@ -32,7 +33,9 @@ int main()
     pages[BEGINNING_PAGE] = std::make_unique<CPageBeginning>();
     // Page Game
     pages[GAME_PAGE] = std::make_unique<CPageGame>();
-    // The following pages are not implemented yet, but will be added in the future.
+    // Page Setting
+    pages[SETTING_PAGE] = std::make_unique<CPageSettings>();
+    // The following pages are not implemented yet, but will be added in the future. ( If possible :) )
     // pages[ENDING_PAGE] = std::make_unique<CPageEnding>();
 
     /* Main game loop */
@@ -52,7 +55,7 @@ int main()
 
             // Debug output for multiple types of events.
             debugOutput(mainWindow, event);
-            
+
             // Check if window size is resized by user and take actions.
             checkWindowResize(mainWindow, event);
             
@@ -86,6 +89,26 @@ int main()
         {
             mouseMoveTrail(event, mainWindow, trail);
             updateTrail(trail, mainWindow);
+        }
+
+        // Adjust window mode based on global settings.
+        if (globalSettings.fullScreen && isInWindowedMode)
+        {
+            // Title is not needed in fullscreen mode.
+            setWindowToFullscreen(mainWindow, "");
+            isInWindowedMode = false;
+        } 
+        else if (!globalSettings.fullScreen && !isInWindowedMode)
+        {
+            setWindowToWindowed(mainWindow, "Mine Sweeper: A simple game create by C++");
+            isInWindowedMode = true;
+        }
+        else ; // No change needed.
+
+        // Display FPS if the setting is enabled.
+        if (globalSettings.showFPS)
+        {
+            displayFPS(mainWindow);
         }
 
         // after updating the frame, display the window.

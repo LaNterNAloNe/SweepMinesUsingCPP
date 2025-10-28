@@ -37,15 +37,15 @@ void initVisualize(RenderWindow &window, const std::string &title) {
 }
 
 // Check if window size is resized by user and take actions.
-void checkWindowResize(sf::RenderWindow &window, sf::Event &event)
+void checkWindowResize(sf::RenderWindow &window, sf::Event &event, bool isForceUpdate)
 {
-    if (event.type == sf::Event::Resized)
+    if (event.type == sf::Event::Resized || isForceUpdate)
     {
-        // 更新虚拟画布尺寸为窗口新尺寸
+        // Update global window size variables.
         WindowSizeX = event.size.width;
         WindowSizeY = event.size.height;
 
-        // 更新视图为新的虚拟画布尺寸
+        // Update the view to the new size.
         sf::View view(sf::FloatRect(0.f, 0.f, WindowSizeX, WindowSizeY));
         view.setCenter(WindowSizeX / 2.f, WindowSizeY / 2.f);
         window.setView(view);
@@ -53,6 +53,97 @@ void checkWindowResize(sf::RenderWindow &window, sf::Event &event)
         cout << "\33[34m[INFO]\33[0m " << "Window resized to: " << WindowSizeX << "x" << WindowSizeY << endl;
     }
 }
+
+// Force window resize. (Set to specific size)
+void forceWindowResize(sf::RenderWindow &window, int width, int height)
+{
+    // Set the window size to the specified width and height.
+    window.setSize(sf::Vector2u(width, height));
+
+    sf::View view(sf::FloatRect(0.f, 0.f, WindowSizeX, WindowSizeY));
+    view.setCenter(WindowSizeX / 2.f, WindowSizeY / 2.f);
+    window.setView(view);
+    cout << "\33[34m[INFO]\33[0m " << "Window resized to: " << WindowSizeX << "x" << WindowSizeY << endl;
+}
+
+// Set window to fullscreen.
+void setWindowToFullscreen(RenderWindow &window, const std::string &title)
+{
+    // Close the current window before creating a new one.
+    window.close();
+
+    // Create a fullscreen window.
+    window.create(VideoMode::getDesktopMode(), title, sf::Style::Fullscreen);
+
+    // Update global window size variables, especially update WindowsSizeX and WindowSizeY.
+    WindowSizeX = VideoMode::getDesktopMode().width;
+    WindowSizeY = VideoMode::getDesktopMode().height;
+    forceWindowResize(window, WindowSizeX, WindowSizeY);
+}
+
+// Set window to windowed mode.
+void setWindowToWindowed(RenderWindow &window, const std::string &title)
+{
+    // Close the current window before creating a new one.
+    window.close();
+
+    // Create a windowed mode window with 75% of desktop resolution.
+    VideoMode desktopMode = VideoMode::getDesktopMode();
+    // Set the window size to 75% of the desktop resolution.
+    WindowSizeX = desktopMode.width / 1.5;
+    WindowSizeY = desktopMode.height / 1.5;
+    // Create the window.
+    window.create(VideoMode(WindowSizeX, WindowSizeY), title,
+    sf::Style::Titlebar | sf::Style::Close | sf::Style::Resize);
+
+    // Update the view to the new size.
+    forceWindowResize(window, WindowSizeX, WindowSizeY);
+}
+
+
+/* Grocery */
+// Display the current FPS on the window.
+void displayFPS(RenderWindow &window)
+{
+    // Calculate the time delta since last frame.
+    static sf::Clock clock;
+    float deltaTime = clock.restart().asSeconds(); // Get time since last frame.
+    float fps = (deltaTime > 0) ? 1.0f / deltaTime : 0;
+
+    // Create a font and text object.
+    static sf::Font font;
+    static bool isFontLoaded = false;
+    if (!isFontLoaded)
+    {
+        if (!font.loadFromFile("../font/font.ttf"))
+        {
+            cout << "\33[31m[ERROR]\33[0m Failed to load font file." << endl;
+            return;
+        }
+        isFontLoaded = true;
+    }
+
+    // Create the text object for FPS display.
+    static sf::Text fpsText;
+    static bool isTextInitialized = false;
+    if (!isTextInitialized)
+    {
+        fpsText.setFont(font);
+        fpsText.setCharacterSize(24);
+        fpsText.setFillColor(sf::Color::Black);
+        isTextInitialized = true;
+    }
+
+    // Update the text with the current FPS.
+    fpsText.setString("FPS  " + std::to_string(static_cast<int>(fps)));
+
+    // Position the text in the top-left corner.
+    fpsText.setPosition(WindowSizeX * 0.45f, 0.f);
+
+    // Draw the text on the window.
+    window.draw(fpsText);
+}
+
 
 /* Mouse move event handler */
 bool isMouseInsideWindow(const sf::RenderWindow &window, const sf::Event &event)

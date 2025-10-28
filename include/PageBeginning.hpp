@@ -20,6 +20,7 @@ public:
         exitButtonTexture("page_beginning/exit.png", updateExitTexturePosition(), updateExitTextureSize()),
         startGameButtonText("Start Game", updateStartGameButtonTextSize(), sf::Color::Black, CENTER, updateStartGameButtonTextPosition()),
         exitButtonText("Exit", updateExitTextSize(), sf::Color::Transparent, LEFT, updateExitTextPosition()),
+        settingsButtonText("Settings", updateSettingsButtonTextSize(), sf::Color::Black, CENTER, updateSettingsButtonTextPosition()),
         exitButtonTextureHover(exitButtonTexture, "page_beginning/exit_hover.png") {}
     // See the comments in Page.hpp for the function's functionality.
     void handleEvent(sf::RenderWindow &window, sf::Event &event, int &currentPage, const std::map<int, std::unique_ptr<CPage>> &pages) override;
@@ -47,6 +48,10 @@ private:
     CVisualText startGameButtonText;
     int updateStartGameButtonTextSize() const { return std::min(WindowSizeX / 1920.f * 40.f, WindowSizeY / 1080.f * 40.f); }
     sf::Vector2f updateStartGameButtonTextPosition() const { return sf::Vector2f(WindowSizeX * 0.5f, WindowSizeY * 0.6f); }
+
+    CVisualText settingsButtonText;
+    int updateSettingsButtonTextSize() const { return std::min(WindowSizeX / 1920.f * 40.f, WindowSizeY / 1080.f * 40.f); }
+    sf::Vector2f updateSettingsButtonTextPosition() const { return sf::Vector2f(WindowSizeX * 0.5f, WindowSizeY * 0.7f); }
 
     // Exit button, and its absolute parameter, which is managed by CPageBeginning, not CVisualTexture.
     CVisualTexture exitButtonTexture;

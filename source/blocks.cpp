@@ -30,7 +30,17 @@ void CGameBoard::handleEvent(sf::RenderWindow &window, sf::Event &event)
     // Wait for transplant
     sf::Vector2i clickedBlock = getClickedBlockPosition(window, event, getBoardArea(), getBlockSize());
 
-    cout << "Clicked block: (" << clickedBlock.x << ", " << clickedBlock.y << ")" << endl;
+    cout << "Clicked block: (" << clickedBlock.x << ", " << clickedBlock.y << ")" << " Type: " << getBlockType(clickedBlock.x, clickedBlock.y) << endl;
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // If it's the first click and it's a mine or number block, replace surrounding mines to other non-mine blocks.
+    // (Only enabled when option: Use Win7 MineSweeper Feature is on)
+    if (globalSettings.useWin7MineSweeperFeature && gameStatus == NONE && revealedBlocksCount == 0 &&
+        getBlockType(clickedBlock.x, clickedBlock.y) != EMPTY)
+    {
+        replaceSurroundingMinesAroundToMapRandomly(clickedBlock.x, clickedBlock.y);
+    }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Return if get invalid clicked block coordinate.
     if (clickedBlock.x == -1 || clickedBlock.y == -1)
@@ -53,16 +63,6 @@ void CGameBoard::handleEvent(sf::RenderWindow &window, sf::Event &event)
             // If the clicked block is a number, just reveal it.
             else
             {
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                // If it's the first click and it's a mine or number block, replace surrounding mines to other non-mine blocks.
-                // (Only enabled when option: Use Win7 MineSweeper Feature is on)
-                if (globalSettings.useWin7MineSweeperFeature && gameStatus == NONE && revealedBlocksCount == 0 &&
-                    (getBlockType(clickedBlock.x, clickedBlock.y) == MINE || getBlockType(clickedBlock.x, clickedBlock.y) == NUMBER))
-                {
-                    // replaceMinesAroundToMapRandomly(clickedBlock.x, clickedBlock.y); // To be implemented.
-                } 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
                 // If the clicked block is not empty, set the mine count around.
                 setMineCountAroundForBlock(clickedBlock.x, clickedBlock.y);
                 // Reveal the block.
@@ -188,6 +188,12 @@ void CGameBoard::render(sf::RenderWindow &window, sf::Event &event)
 
 int CGameBoard::findMineCountAround(int x, int y)
 {
+    if (x < 0 || x >= boardSizeX || y < 0 || y >= boardSizeY)
+        return 0;
+
+    if (blocks[x][y]->getType() == MINE)
+        return -1;
+
     // Find the number of mines around this block.
     int mineCoutAround = 0;
     for (int i = x - 1; i <= x + 1; i++)
@@ -368,11 +374,217 @@ void CGameBoard::revealBlocksNearbyIfNearbyFlagsEqualNum(int x, int y)
 // Replace mines around to map randomly if clicked block is a mine or number block.
 void CGameBoard::replaceSurroundingMinesAroundToMapRandomly(int x, int y)
 {
-    // Check if the block is out of bounds.
     if (x < 0 || x >= boardSizeX || y < 0 || y >= boardSizeY)
         return;
 
-    // More implementation to be added.
+    // Step 1: Collect all positions in the 3x3 area around (x, y)
+    std::vector<std::pair<int, int>> surrounding9;
+    for (int dx = -1; dx <= 1; ++dx)
+    {
+        for (int dy = -1; dy <= 1; ++dy)
+        {
+            int nx = x + dx;
+            int ny = y + dy;
+            if (nx >= 0 && nx < boardSizeX && ny >= 0 && ny < boardSizeY)
+            {
+                surrounding9.emplace_back(nx, ny);
+            }
+        }
+    }
+
+    // Step 2: Count how many mines are in the surrounding area
+    std::vector<std::pair<int, int>> minesToMove;
+    for (auto &pos : surrounding9)
+    {
+        int i = pos.first;
+        int j = pos.second;
+        if (blocks[i][j]->getType() == MINE)
+        {
+            // If it is mine, add to minesToMove. Surrounding 9 blocks will be defined to non-mine blocks later.
+            blocks[i][j]->setType(UNKNOWN); // Temporarily set to UNKNOWN
+            minesToMove.push_back(pos);
+
+            cout << "\33[34m[INFO]\33[0m Mine found at (" << i << ", " << j << "), preparing to relocate." << endl;
+        }
+    }
+
+    // Step 3: Find all valid positions outside the surrounding area to relocate mines
+    std::vector<std::pair<int, int>> candidates;
+    for (int i = 0; i < boardSizeX; ++i)
+    {
+        for (int j = 0; j < boardSizeY; ++j)
+        {
+            if (blocks[i][j]->getType() != MINE &&
+                std::find(surrounding9.begin(), surrounding9.end(), std::make_pair(i, j)) == surrounding9.end())
+            {
+                candidates.emplace_back(i, j);
+            }
+        }
+    }
+
+    // Step 4: Shuffle candidates and place mines
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::shuffle(candidates.begin(), candidates.end(), gen);
+
+    int i = 0; // Index for minesToMove
+
+    for (/* Nothing to do */; i < minesToMove.size() && i < candidates.size(); ++i)
+    {
+        int tx = candidates[i].first;
+        int ty = candidates[i].second;
+
+        transformBlockType(tx, ty, MINE);
+        updateSurroundingBlocksMineCount(tx, ty);
+
+        cout << "\33[34m[INFO]\33[0m Replace mines to (" << tx << ", " << ty << ")" << endl;
+    }
+
+    // Step 4.5: Realocate remaining mines to the original positions surrounding if not enough space.
+    if (minesToMove.size() > candidates.size())
+    {
+        cout << "\33[33m[WARNING]\33[0m Not enough space to relocate found mines! Realocate to original positions surrounding." << endl;
+
+        // Get original position surrounding 8 blocks' positions.
+        std::vector<std::pair<int, int>> surrounding8;
+        for (int dx = -1; dx <= 1; ++dx)
+        {
+            for (int dy = -1; dy <= 1; ++dy)
+            {
+                int nx = x + dx;
+                int ny = y + dy;
+                if (nx >= 0 && nx < boardSizeX && ny >= 0 && ny < boardSizeY && !(dx == 0 && dy == 0)) // (dx == 0 && dy == 0) is the center block.
+                {
+                    surrounding8.emplace_back(nx, ny);
+                }
+            }
+        }
+
+        // Shuffle surrounding8 to randomize mine placement.
+        std::shuffle(surrounding8.begin(), surrounding8.end(), gen);
+
+        // We know that count of remaining mines is (minesToMove.size() - candidates.size()) which is absolutely less than surrounding.size()
+        // But we still need to check if there is enough space in surrounding to realocate.
+        // Here inherent i value from last loop, and use j to iterate surrounding8.
+        for (int j = 0; i < minesToMove.size() && j < surrounding8.size(); ++i, ++j)
+        {
+            int tx = surrounding8[j].first;
+            int ty = surrounding8[j].second;
+
+            transformBlockType(tx, ty, MINE);
+            updateSurroundingBlocksMineCount(tx, ty);
+
+            cout << "\33[33m[WARNING]\33[0m Replace mines to (" << tx << ", " << ty << ")" << endl;
+        }
+
+        // Then update surrounding9 queue to the new condition. The same as step 1.
+        surrounding9.clear();
+        for (int dx = -1; dx <= 1; ++dx)
+        {
+            for (int dy = -1; dy <= 1; ++dy)
+            {
+                int nx = x + dx;
+                int ny = y + dy;
+                if (nx >= 0 && nx < boardSizeX && ny >= 0 && ny < boardSizeY)
+                {
+                    surrounding9.emplace_back(nx, ny);
+                }
+            }
+        }
+    }
+
+    // Step 5: Set surrounding blocks to safe blocks
+    for (const auto &pos : surrounding9)
+    {    
+        int tx = pos.first;
+        int ty = pos.second;
+
+        // Check if the block is already a mine, if so, it could be experienced step 4.5.
+        if (blocks[tx][ty]->getType() == MINE)
+            continue;
+
+        transformBlockType(tx, ty, SAFE);
+        updateSurroundingBlocksMineCount(tx, ty);
+
+        cout << "\33[34m[INFO]\33[0m Set (" << tx << ", " << ty << ") to SAFE." << endl;
+    }
+
+    // Finally we re-shuffled the mines around (x, y) to make sure the game is still solvable.
+    // But now we need to update the block position on real window.
+}
+
+
+// Transform a block type to new type.
+void CGameBoard::transformBlockType(int x, int y, short newType)
+{
+    if (x < 0 || x >= boardSizeX || y < 0 || y >= boardSizeY)
+        return;
+
+    // Transform the block type.
+    auto newBlock = std::unique_ptr<CBlock>(nullptr);
+    if (newType == SAFE)
+        newBlock = std::make_unique<CSafeBlock>();
+    else if (newType == MINE)
+        newBlock = std::make_unique<CMineBlock>();
+    else
+    {
+        cout << "\33[31m[ERROR]\33[0m (In function CGameBoard::transformBlockType) Invalid new type to transform: " << newType << endl;
+        return;
+    }
+
+    int mineCountAround = findMineCountAround(x, y);
+
+    newBlock->setMineCountAround(mineCountAround, x, y, boardSizeX, boardSizeY); // Set mine count around.
+
+    // Set block type according to mine count around.
+    if (newType == MINE)
+    {
+        newBlock->setType(MINE);
+    }
+    else if (newType == SAFE)
+    {
+        newBlock->setType(mineCountAround > 0 ? NUMBER : EMPTY);
+    }
+    else 
+    {
+        cout << "\33[31m[ERROR]\33[0m (In function CGameBoard::transformBlockType) Invalid new type to transform: " << newType << endl;
+        return;
+    }
+
+    newBlock->blockTexture.path = transformMineCountToTextureName(newBlock->getMineCountAround()); // Set texture path.
+    newBlock->blockTexture.size = {blockSize, blockSize}; // Set block size.
+    // Set block position.
+    sf::FloatRect blockPosition = sf::FloatRect(boardStartX + x * blockSize, boardStartY + y * blockSize, blockSize, blockSize); 
+    newBlock->setPosition(blockPosition); // Finally Set position.
+
+    this->blocks[x][y] = std::move(newBlock); // Finally replace the block.
+}
+
+
+// Update surrounding (8) blocks' mine count after transforming a block to new type.
+void CGameBoard::updateSurroundingBlocksMineCount(int x, int y)
+{
+    // If the position is out of board, no need to update.
+    if (x < 0 || x >= boardSizeX || y < 0 || y >= boardSizeY)
+        return;
+    
+    // If the block is mine, no need to update.
+    if (blocks[x][y]->getType() == MINE)
+        return;
+
+    // Update the mine count around for each surrounding block.
+    for (int dx = -1; dx <= 1; ++dx)
+    {
+        for (int dy = -1; dy <= 1; ++dy)
+        {
+            int nx = x + dx;
+            int ny = y + dy;
+            if (nx >= 0 && nx < boardSizeX && ny >= 0 && ny < boardSizeY)
+            {
+                setMineCountAroundForBlock(nx, ny);
+            }
+        }
+    }
 }
 
 
@@ -392,11 +604,12 @@ void CGameBoard::initialize(int boardSizeX, int boardSizeY, int mineCount)
     // Generate the game board area according to the board size, align to the center of the virtual window.
     float blockSizeX = (WindowSizeX - 80) / boardSizeX;
     float blockSizeY = (WindowSizeY - 80) / boardSizeY;
-    float blockSize = std::min(blockSizeX, blockSizeY);
+    blockSize = std::min(blockSizeX, blockSizeY);
     float boardX = blockSize * boardSizeX;
     float boardY = blockSize * boardSizeY;
-    float boardStartX = (WindowSizeX - boardX) / 2;
-    float boardStartY = (WindowSizeY - boardY) / 2;
+
+    boardStartX = (WindowSizeX - boardX) / 2;
+    boardStartY = (WindowSizeY - boardY) / 2;
 
     // Set the game board area.
     boardArea = sf::FloatRect(boardStartX, boardStartY, boardX, boardY);
@@ -485,11 +698,11 @@ void CGameBoard::updateBoardAndBlockVisualization()
     // Update gameboard's area.
     float blockSizeX = (WindowSizeX - 80) / boardSizeX;
     float blockSizeY = (WindowSizeY - 80) / boardSizeY;
-    float blockSize = std::min(blockSizeX, blockSizeY);
+    blockSize = std::min(blockSizeX, blockSizeY);
     float boardX = blockSize * boardSizeX;
     float boardY = blockSize * boardSizeY;
-    float boardStartX = (WindowSizeX - boardX) / 2;
-    float boardStartY = (WindowSizeY - boardY) / 2;
+    boardStartX = (WindowSizeX - boardX) / 2;
+    boardStartY = (WindowSizeY - boardY) / 2;
     boardArea = sf::FloatRect(boardStartX, boardStartY, boardX, boardY);
 
     // Update blocks' position.

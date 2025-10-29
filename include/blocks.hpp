@@ -12,7 +12,7 @@ using std::vector;
 #define FLAG 3
 #define NUMBER 2
 #define EMPTY 1
-#define SAFE 0 // Represents a safe block, which is empty or has a number of mines around it, showing mines count around. Attention: SAFE type should not be used unless neccessary
+#define SAFE 0 // Abstract type: used to request a safe block (either EMPTY or NUMBER). DO NOT use this type to set a block's type directly.
 #define MINE -1
 #define UNKNOWN -2
 
@@ -173,6 +173,12 @@ public:
     // Replace mines around to map randomly if clicked block is a mine or number block.
     void replaceSurroundingMinesAroundToMapRandomly(int x, int y);
 
+    // Transform a block type to new type.
+    void transformBlockType(int x, int y, short newType);
+
+    // Update surrounding (8) blocks' mine count after transforming a block to new type.
+    void updateSurroundingBlocksMineCount(int x, int y);
+
     // find mine count around
     int findMineCountAround(int x, int y);
 
@@ -222,6 +228,9 @@ private:
     // Game board size. (Default 10x10)
     int boardSizeX;
     int boardSizeY;
+    float boardStartX;
+    float boardStartY;
+    float blockSize; // Size of each block.
 
     // Game board blocks. (Unknown size, waiting for initialization)
     // Here, use unique_ptr to manage the memory of the blocks.

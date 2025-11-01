@@ -567,10 +567,6 @@ void CGameBoard::updateSurroundingBlocksMineCount(int x, int y)
     // If the position is out of board, no need to update.
     if (x < 0 || x >= boardSizeX || y < 0 || y >= boardSizeY)
         return;
-    
-    // If the block is mine, no need to update.
-    if (blocks[x][y]->getType() == MINE)
-        return;
 
     // Update the mine count around for each surrounding block.
     for (int dx = -1; dx <= 1; ++dx)
